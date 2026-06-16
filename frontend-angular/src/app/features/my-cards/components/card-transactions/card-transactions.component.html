@@ -1,0 +1,109 @@
+<section class="transactions-shell">
+  <div class="transactions-header">
+    <div class="header-copy">
+      <span class="eyebrow">Transactions</span>
+      <h2>{{ card ? 'Transactions de ' + card.maskedCardNumber : 'Transactions de la carte' }}</h2>
+      <p>Les mouvements importes de la carte selectionnee apparaissent ici dans une lecture bancaire claire.</p>
+    </div>
+
+    @if (card && transactions.length) {
+      <div class="summary-pills">
+        <span class="summary-pill">
+          <strong>{{ transactions.length }}</strong>
+          <span>mouvements</span>
+        </span>
+        <span class="summary-pill summary-pill-highlight">
+          <strong>{{ formatMoney(totalAmount) }}</strong>
+          <span>volume affiche</span>
+        </span>
+      </div>
+    }
+  </div>
+
+  @if (!card) {
+    <div class="empty-state">
+      <span class="material-symbols-rounded empty-icon">credit_card</span>
+      <h3>Selectionnez une carte</h3>
+      <p>Choisissez une carte connectee pour afficher ses transactions et piloter sa synchronisation.</p>
+    </div>
+  } @else if (loading) {
+    <div class="loading-state">
+      <span class="spinner"></span>
+      <p>Chargement des transactions en cours...</p>
+    </div>
+  } @else if (error) {
+    <div class="error-state">
+      <span class="material-symbols-rounded">error</span>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (!transactions.length) {
+    <div class="empty-state">
+      <span class="material-symbols-rounded empty-icon">receipt_long</span>
+      <h3>Aucune transaction importee</h3>
+      <p>Cette carte est connectee, mais aucun mouvement n est encore disponible pour le moment.</p>
+    </div>
+  } @else {
+    <div class="transactions-list">
+      @for (transaction of transactions; track transaction.id) {
+        <article class="transaction-row">
+          <div class="transaction-main">
+            <span
+              class="merchant-mark"
+              [class.credit]="getTransactionTone(transaction) === 'credit'"
+              [class.debit]="getTransactionTone(transaction) === 'debit'"
+            >
+              <span class="material-symbols-rounded">
+                {{ getTransactionTone(transaction) === 'credit' ? 'south_west' : 'north_east' }}
+              </span>
+            </span>
+
+            <div class="transaction-copy">
+              <div class="transaction-title-row">
+                <h3>{{ transaction.description }}</h3>
+
+                @if (transaction.status) {
+                  <span class="status-pill">{{ transaction.status }}</span>
+                }
+              </div>
+
+              <div class="transaction-meta">
+                @if (transaction.merchantName) {
+                  <span>{{ transaction.merchantName }}</span>
+                }
+
+                @if (transaction.category) {
+                  <span>{{ transaction.category }}</span>
+                }
+
+                <span>{{ formatDate(transaction.date) }}</span>
+
+                @if (transaction.source) {
+                  <span>{{ transaction.source }}</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="transaction-side">
+            <strong
+              class="amount"
+              [class.credit]="getTransactionTone(transaction) === 'credit'"
+              [class.debit]="getTransactionTone(transaction) === 'debit'"
+            >
+              {{ getAmountPrefix(transaction) }}{{ formatMoney(transaction.amount) }}
+            </strong>
+
+            @if (transaction.paymentMethod || transaction.cardLast4) {
+              <span class="payment-note">
+                {{ transaction.paymentMethod || 'Carte' }}
+                @if (transaction.cardLast4) {
+                  <span>- {{ transaction.cardLast4 }}</span>
+                }
+              </span>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</section>

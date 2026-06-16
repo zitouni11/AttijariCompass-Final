@@ -1,0 +1,20 @@
+@startuml
+title Attijari Compass - Architecture globale simplifiee
+
+skinparam shadowing false
+
+actor "Utilisateur" as User
+rectangle "Angular 17\nInterface web" as Front
+rectangle "Spring Boot\nAPI REST securisee" as Back
+database "PostgreSQL" as DB
+rectangle "FastAPI ML\nCategorisation" as ML
+cloud "Groq API\nChatbot RAG" as Groq
+rectangle "Dashboard / Reports" as Reporting
+
+User --> Front
+Front --> Back : REST + JWT
+Back --> DB : JPA
+Back --> ML : /predict
+Back --> Groq : prompt + contexte
+Back --> Reporting
+@enduml

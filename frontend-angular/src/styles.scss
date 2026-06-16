@@ -1,0 +1,846 @@
+/* ============================================================
+   Attijari Compass - Global Styles
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,500,0,0&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap');
+
+:root {
+  --or: #E8500A;
+  --or2: #FF6B2B;
+  --or-pale: #FFF3ED;
+  --dark: #160B04;
+  --dark2: #261408;
+  --dark3: #3A1E0C;
+  --cream: #FAF6F2;
+  --sand: #F2E9E0;
+  --muted: #8C6A55;
+  --border: rgba(232, 80, 10, 0.13);
+
+  --attijari-orange: #F58220;
+  --attijari-orange-dark: #E56F0F;
+  --attijari-orange-soft: #FFF1E6;
+  --attijari-black: #111111;
+  --attijari-anthracite: #1C1C1C;
+  --attijari-text: #222222;
+  --attijari-white: #FFFFFF;
+  --attijari-offwhite: #F8F8F8;
+  --attijari-border: #E7E2DC;
+  --attijari-muted: #6F6F6F;
+  --attijari-success: #5B8E63;
+  --attijari-success-soft: #EEF5EF;
+  --attijari-danger: #C85A4F;
+  --attijari-danger-soft: #FAEEEC;
+  --attijari-warning: #E56F0F;
+  --attijari-warning-soft: #FFF1E6;
+  --attijari-info: #3F3A36;
+  --attijari-info-soft: #F2EEEA;
+  --gradient-brand-accent: linear-gradient(135deg, #F58220 0%, #E56F0F 100%);
+  --gradient-brand-dark: linear-gradient(135deg, #111111 0%, #1C1C1C 100%);
+  --gradient-brand-soft: linear-gradient(180deg, #FFFFFF 0%, #FAF7F4 100%);
+  --gradient-brand-surface: linear-gradient(180deg, #FFFFFF 0%, #FBF9F7 100%);
+  --gradient-brand-highlight: linear-gradient(135deg, rgba(245, 130, 32, 0.14) 0%, rgba(229, 111, 15, 0.08) 100%);
+  --shadow-card: 0 16px 40px rgba(17, 17, 17, 0.06);
+  --shadow-card-strong: 0 28px 56px rgba(17, 17, 17, 0.10);
+  --shadow-sidebar: 18px 0 40px rgba(17, 17, 17, 0.22);
+  --shadow-glow: 0 16px 34px rgba(245, 130, 32, 0.20);
+  --radius-card: 24px;
+  --radius-card-lg: 32px;
+  --radius-pill: 999px;
+  --radius-soft: 18px;
+  --recommendations-gap: 1.5rem;
+  --recommendations-radius: 32px;
+  --recommendations-shadow: var(--shadow-card);
+  --recommendations-strong-shadow: var(--shadow-card-strong);
+
+  /* Compatibility aliases for existing components */
+  --color-primary-navy: var(--attijari-anthracite);
+  --color-deep-navy: var(--attijari-black);
+  --color-accent-orange: var(--attijari-orange);
+  --color-accent-red: var(--attijari-orange-dark);
+  --color-accent-gold: #F7A356;
+  --color-bg-soft: var(--attijari-offwhite);
+  --color-card: var(--attijari-white);
+  --color-text-main: var(--attijari-text);
+  --color-text-muted: var(--attijari-muted);
+  --color-text-soft: #4C4C4C;
+  --color-line-soft: rgba(17, 17, 17, 0.08);
+  --color-line-strong: rgba(17, 17, 17, 0.14);
+  --color-sidebar-line: rgba(255, 255, 255, 0.09);
+  --color-overlay: rgba(17, 17, 17, 0.52);
+  --color-state-low: var(--attijari-success);
+  --color-state-low-soft: var(--attijari-success-soft);
+  --color-state-medium: #D88B2E;
+  --color-state-medium-soft: #FFF2E2;
+  --color-state-high: var(--attijari-orange);
+  --color-state-high-soft: var(--attijari-orange-soft);
+  --color-state-critical: var(--attijari-danger);
+  --color-state-critical-soft: var(--attijari-danger-soft);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(232, 80, 10, 0.08), transparent 22%),
+    radial-gradient(circle at 88% 12%, rgba(22, 11, 4, 0.05), transparent 18%),
+    linear-gradient(180deg, var(--cream) 0%, #f8f2ec 100%);
+  color: var(--dark);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(232, 80, 10, 0.18);
+  color: var(--dark);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(17, 17, 17, 0.16);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 17, 17, 0.28);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--dark);
+}
+
+input, select, textarea, button {
+  font-family: 'Outfit', sans-serif;
+}
+
+button {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded', sans-serif;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 500,
+    'GRAD' 0,
+    'opsz' 24;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+@keyframes fadeInPage {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+app-dashboard,
+app-transactions-list,
+app-budgets-page,
+app-my-cards-page,
+app-card-detail-page,
+app-goals-list,
+app-recommendations,
+app-simulations,
+app-storytelling,
+app-users-list,
+app-profile,
+app-transaction-form,
+app-goal-form {
+  display: block;
+  animation: fadeInPage 0.25s ease-out;
+}
+
+app-recommendations {
+  @import './app/features/recommendations/recommendations.theme';
+}
+
+app-my-cards-page {
+  @import './app/features/my-cards/my-cards-premium.theme';
+}
+
+app-card-detail-page {
+  @import './app/features/my-cards/my-cards-premium.theme';
+}
+
+app-dashboard {
+  @import './app/features/dashboard/dashboard.theme';
+}
+
+app-transactions-list {
+  @import './app/features/transactions/transactions.theme';
+}
+
+app-budgets-page {
+  @import './app/features/budgets/budgets.theme';
+}
+
+app-simulations {
+  @import './app/features/simulations/simulations.theme';
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+
+.btn-attijari-primary,
+body .btn-primary,
+body .btn-simulate,
+body .btn-add {
+  background: var(--gradient-brand-accent) !important;
+  color: var(--attijari-white) !important;
+  border: 1px solid var(--attijari-orange-dark) !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+.btn-attijari-secondary,
+body .btn-secondary,
+body .btn-ghost,
+body .btn-refresh,
+body .btn-icon,
+body .page-btn,
+body .mode-chip,
+body .tab,
+body .action-btn,
+body .btn-remove,
+body .btn-logout,
+body .btn-delete {
+  background: var(--attijari-white) !important;
+  color: var(--attijari-text) !important;
+  border: 1px solid var(--attijari-border) !important;
+  box-shadow: none !important;
+}
+
+.btn-attijari-danger,
+body .btn-icon.danger,
+body .btn-delete,
+body .btn-logout {
+  color: var(--attijari-danger) !important;
+  border-color: rgba(200, 90, 79, 0.24) !important;
+}
+
+body .btn-primary:hover:not(:disabled),
+body .btn-simulate:hover:not(:disabled),
+body .btn-add:hover:not(:disabled),
+body .btn-secondary:hover:not(:disabled),
+body .btn-ghost:hover:not(:disabled),
+body .btn-refresh:hover:not(:disabled),
+body .btn-icon:hover:not(:disabled),
+body .page-btn:hover:not(:disabled),
+body .mode-chip:hover:not(:disabled),
+body .tab:hover:not(:disabled),
+body .action-btn:hover:not(:disabled),
+body .btn-remove:hover:not(:disabled),
+body .btn-logout:hover:not(:disabled),
+body .btn-delete:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+body .mode-chip.active,
+body .tab.active,
+body .page-btn.active {
+  background: var(--gradient-brand-accent) !important;
+  color: var(--attijari-white) !important;
+  border-color: transparent !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+.card-attijari,
+body .table-card,
+body .chart-card,
+body .goal-card,
+body .form-card,
+body .profile-card,
+body .danger-card,
+body .sim-form,
+body .sim-result,
+body .alerts-card,
+body .missions-card,
+body .panel,
+body .stat-card,
+body .support-card,
+body .info-box,
+body .hero-main,
+body .hero-side,
+body .assistant-card,
+body .assistant-notes,
+body .conversation-card,
+body .notification {
+  background: var(--attijari-white) !important;
+  border: 1px solid var(--attijari-border) !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.input-attijari,
+body input:not([type='range']):not([type='radio']):not([type='checkbox']):not([type='file']),
+body select,
+body textarea {
+  background: var(--attijari-white) !important;
+  color: var(--attijari-text) !important;
+  border: 1px solid var(--attijari-border) !important;
+  box-shadow: none !important;
+}
+
+body input::placeholder,
+body textarea::placeholder {
+  color: #9A938B !important;
+}
+
+body input:not([type='range']):not([type='radio']):not([type='checkbox']):not([type='file']):focus,
+body select:focus,
+body textarea:focus,
+body .search-wrapper:focus-within,
+body .input-shell:focus-within,
+body .input-wrapper:focus-within {
+  border-color: var(--attijari-orange) !important;
+  box-shadow: 0 0 0 4px rgba(245, 130, 32, 0.12) !important;
+}
+
+.badge-attijari,
+body .card-badge,
+body .section-count,
+body .panel-time,
+body .compare-badge,
+body .kpi-meta,
+body .micro-badge,
+body .signal-chip {
+  background: var(--attijari-info-soft) !important;
+  color: var(--attijari-info) !important;
+  border-color: transparent !important;
+}
+
+body .page-title,
+body .section-title,
+body .current-page,
+body .goal-name,
+body .chart-title,
+body .agent-name,
+body .section-head h2,
+body .prediction-header h2,
+body .panel-header h3,
+body .card-header h3,
+body h3,
+body h4 {
+  color: var(--attijari-black);
+}
+
+body .page-subtitle,
+body .page-header p,
+body .goal-desc,
+body .hint,
+body .join-date,
+body .merchant,
+body .muted,
+body .footer-info,
+body .role-desc,
+body .page-breadcrumb .breadcrumb-label {
+  color: var(--attijari-muted) !important;
+}
+
+body thead,
+body .table-footer,
+body .suggested-actions,
+body .input-section,
+body .preview-section,
+body .goal-stats,
+body .progress-card,
+body .metric,
+body .metric-card,
+body .blocking-card,
+body .recommendation-card,
+body .scenario-card,
+body .action-card-kpis .mini-kpi,
+body .r-stat,
+body .empty-inline {
+  background: var(--attijari-offwhite) !important;
+}
+
+body th,
+body .progress-label,
+body .stat-label,
+body .kpi-label,
+body .kpi-meter-label,
+body .kpi-split-label,
+body .h-label,
+body .r-label,
+body .mini-label,
+body .metric-label,
+body .meta-label,
+body .chip-label,
+body .panel-label,
+body .section-kicker,
+body .eyebrow {
+  color: var(--attijari-muted) !important;
+}
+
+body tr:hover td {
+  background: #FCF8F4 !important;
+}
+
+body .search-wrapper,
+body .filter-select,
+body .tabs,
+body .mode-switch,
+body .upload-zone,
+body .file-preview {
+  background: var(--attijari-white) !important;
+  border: 1px solid var(--attijari-border) !important;
+  box-shadow: none !important;
+}
+
+body .search-wrapper,
+body .filter-select,
+body .tabs,
+body .mode-switch {
+  border-radius: 16px !important;
+}
+
+body .upload-zone.drag-over,
+body .action-btn:hover:not(:disabled) {
+  background: var(--attijari-orange-soft) !important;
+  border-color: rgba(245, 130, 32, 0.38) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+body .status-badge.status-en_cours,
+body .status-badge.status-healthy,
+body .status-badge.status-stable,
+body .role-badge.role-admin,
+body .badge-admin,
+body .stat-pill.admin {
+  background: var(--attijari-orange-soft) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+body .status-badge.status-atteint,
+body .type-badge.revenu,
+body .sum-value.positive,
+body .amount-positive,
+body .kpi-trend.positive,
+body .micro-badge-positive {
+  background: var(--attijari-success-soft) !important;
+  color: var(--attijari-success) !important;
+}
+
+body .status-badge.status-abandonne,
+body .role-badge.role-user,
+body .stat-pill.user,
+body .type-badge,
+body .score-badge.score-unknown {
+  background: var(--attijari-info-soft) !important;
+  color: var(--attijari-info) !important;
+  border-color: rgba(17, 17, 17, 0.08) !important;
+}
+
+body .type-badge.depense,
+body .score-badge.score-risky,
+body .sum-value.negative,
+body .amount-negative,
+body .negative-value,
+body .kpi-trend.negative,
+body .r-value.danger {
+  background: var(--attijari-danger-soft) !important;
+  color: var(--attijari-danger) !important;
+}
+
+body .score-badge.score-good,
+body .score-badge.score-average,
+body .kpi-trend.warning,
+body .status-alert,
+body .status-balanced {
+  background: var(--attijari-orange-soft) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+body .status-critical,
+body .feedback-error .feedback-icon {
+  background: var(--attijari-danger-soft) !important;
+  color: var(--attijari-danger) !important;
+}
+
+body .progress-bar,
+body .mp-bar,
+body .bar-container,
+body .meter-track,
+body .cat-bar-wrapper {
+  background: #EFEAE5 !important;
+}
+
+body .progress-fill.low {
+  background: var(--attijari-danger) !important;
+}
+
+body .progress-fill.medium,
+body .progress-fill.high,
+body .progress-fill.complete,
+body .mp-fill,
+body .meter-fill,
+body .bar {
+  background: var(--gradient-brand-accent) !important;
+}
+
+/* ============================================================
+   Shared Shell
+   ============================================================ */
+
+app-layout .date-badge,
+app-layout .mobile-menu-btn {
+  background: var(--attijari-offwhite) !important;
+  border-color: var(--attijari-border) !important;
+  color: var(--attijari-text) !important;
+}
+
+app-layout .storytelling-btn {
+  background: var(--gradient-brand-dark) !important;
+}
+
+app-layout .storytelling-btn-badge {
+  background: var(--gradient-brand-accent) !important;
+  color: var(--attijari-white) !important;
+}
+
+app-layout .app-header {
+  background: rgba(22, 11, 4, 0.85) !important;
+  backdrop-filter: blur(18px) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* ============================================================
+   Dashboard
+   ============================================================ */
+
+app-dashboard .kpi-card {
+  border-top: 3px solid rgba(245, 130, 32, 0.22) !important;
+}
+
+app-dashboard .kpi-revenu,
+app-dashboard .kpi-positive,
+app-dashboard .kpi-epargne {
+  border-top-color: var(--attijari-orange) !important;
+}
+
+app-dashboard .kpi-depenses,
+app-dashboard .kpi-negative {
+  border-top-color: var(--attijari-danger) !important;
+}
+
+app-dashboard .score-ring {
+  border-color: #E9E2DA !important;
+}
+
+app-dashboard .score-ring.excellent,
+app-dashboard .score-ring.good,
+app-dashboard .score-ring.average {
+  border-color: var(--attijari-orange) !important;
+}
+
+app-dashboard .score-ring.poor {
+  border-color: var(--attijari-danger) !important;
+}
+
+/* ============================================================
+   Goals
+   ============================================================ */
+
+app-goals-list .goal-card.status-en_cours {
+  border-left: 4px solid var(--attijari-orange) !important;
+}
+
+app-goals-list .goal-card.status-atteint {
+  border-left: 4px solid var(--attijari-success) !important;
+}
+
+app-goals-list .goal-card.status-abandonne {
+  border-left: 4px solid #A09B95 !important;
+}
+
+app-goal-form .preview-section {
+  background: var(--attijari-orange-soft) !important;
+  border: 1px solid rgba(245, 130, 32, 0.16) !important;
+}
+
+app-goal-detail .hero-icon,
+app-goal-detail .empty-illustration,
+app-goal-detail .upload-icon,
+app-goal-detail .big-avatar {
+  background: var(--gradient-brand-accent) !important;
+  color: var(--attijari-white) !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+app-goal-detail .prediction-card,
+app-goal-detail .story-card {
+  background: var(--gradient-brand-dark) !important;
+  color: var(--attijari-white) !important;
+}
+
+app-goal-detail .story-card.story-fallback {
+  background: linear-gradient(135deg, #2A2A2A 0%, #1C1C1C 100%) !important;
+}
+
+app-goal-detail .mini-label,
+app-goal-detail .prediction-item .label,
+app-goal-detail .story-meta {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+app-goal-detail .score-value,
+app-goal-detail .prediction-item strong,
+app-goal-detail .story-card h4,
+app-goal-detail .story-summary {
+  color: var(--attijari-white) !important;
+}
+
+app-goal-detail .scenario-card.scenario-prudent,
+app-goal-detail .scenario-card.scenario-equilibre,
+app-goal-detail .scenario-card.scenario-agressif {
+  border-top-color: var(--attijari-orange) !important;
+}
+
+app-goal-detail .scenario-score,
+app-goal-detail .priority-badge,
+app-goal-detail .mini-chip {
+  background: var(--attijari-orange-soft) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+/* ============================================================
+   Tables and Transactions
+   ============================================================ */
+
+app-transactions-list .error-banner,
+app-goal-detail .error-banner,
+app-goal-detail .section-error {
+  background: var(--attijari-danger-soft) !important;
+  border-color: rgba(200, 90, 79, 0.24) !important;
+  color: var(--attijari-danger) !important;
+}
+
+app-transactions-list .empty-mark,
+app-transactions-list .empty-illustration {
+  background: var(--gradient-brand-accent) !important;
+  color: var(--attijari-white) !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+app-transaction-form .info-box,
+app-transaction-form .acceptance-note {
+  background: var(--attijari-orange-soft) !important;
+  border-color: rgba(245, 130, 32, 0.18) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+app-transaction-form .info-icon {
+  background: rgba(245, 130, 32, 0.14) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+app-transaction-form pre {
+  background: #171717 !important;
+  color: #F8F3EE !important;
+}
+
+/* ============================================================
+   Profile / Users
+   ============================================================ */
+
+app-profile .big-avatar,
+app-users-list .user-avatar {
+  background: var(--gradient-brand-dark) !important;
+  color: var(--attijari-white) !important;
+}
+
+/* ============================================================
+   Simulations / Storytelling
+   ============================================================ */
+
+app-simulations .result-hero,
+app-storytelling .story-hero {
+  background: var(--gradient-brand-dark) !important;
+  color: var(--attijari-white) !important;
+}
+
+app-simulations .result-big,
+app-storytelling .tc-value {
+  color: var(--attijari-orange) !important;
+}
+
+app-simulations .result-message,
+app-storytelling .alert-item {
+  background: var(--attijari-orange-soft) !important;
+  border-color: rgba(245, 130, 32, 0.18) !important;
+}
+
+app-simulations .result-message p,
+app-storytelling .alert-item p {
+  color: var(--attijari-orange-dark) !important;
+}
+
+app-storytelling .s-stat.income {
+  background: rgba(91, 142, 99, 0.14) !important;
+}
+
+app-storytelling .s-stat.expenses,
+app-storytelling .s-stat.deficit {
+  background: rgba(200, 90, 79, 0.14) !important;
+}
+
+app-storytelling .s-stat.savings {
+  background: rgba(245, 130, 32, 0.14) !important;
+}
+
+app-storytelling .top-cats,
+app-storytelling .prediction-note {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ============================================================
+   Storytelling Chat
+   ============================================================ */
+
+app-chat .chat-container {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(245, 130, 32, 0.10), transparent 18%),
+    linear-gradient(180deg, #FBF9F7 0%, var(--attijari-offwhite) 100%) !important;
+}
+
+app-chat .avatar-container {
+  background: var(--attijari-orange-soft) !important;
+  border-color: var(--attijari-orange) !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+app-chat .agent-name,
+app-chat .chart-title,
+app-chat .message-agent .message-content,
+app-chat .message-agent .message-text,
+app-chat .bar-value,
+app-chat .file-name {
+  color: var(--attijari-black) !important;
+}
+
+app-chat .status-dot.active {
+  background: var(--attijari-orange) !important;
+}
+
+app-chat .status-dot {
+  background: var(--attijari-danger) !important;
+}
+
+app-chat .message-user .message-content,
+app-chat .send-btn {
+  background: var(--gradient-brand-accent) !important;
+  color: var(--attijari-white) !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+app-chat .message-agent .message-content {
+  background: var(--attijari-white) !important;
+  border: 1px solid var(--attijari-border) !important;
+}
+
+app-chat .action-btn:hover:not(:disabled) {
+  background: var(--attijari-orange-soft) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+/* ============================================================
+   Notifications / Loaders
+   ============================================================ */
+
+.notifications-container .notification-success {
+  background: var(--attijari-success-soft) !important;
+  border-left-color: var(--attijari-success) !important;
+  color: var(--attijari-success) !important;
+}
+
+.notifications-container .notification-error {
+  background: var(--attijari-danger-soft) !important;
+  border-left-color: var(--attijari-danger) !important;
+  color: var(--attijari-danger) !important;
+}
+
+.notifications-container .notification-warning {
+  background: var(--attijari-orange-soft) !important;
+  border-left-color: var(--attijari-orange-dark) !important;
+  color: var(--attijari-orange-dark) !important;
+}
+
+.notifications-container .notification-info {
+  background: var(--attijari-info-soft) !important;
+  border-left-color: var(--attijari-anthracite) !important;
+  color: var(--attijari-info) !important;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 768px) {
+  body .page-header {
+    gap: 1rem;
+  }
+}

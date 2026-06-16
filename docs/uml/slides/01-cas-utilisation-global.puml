@@ -1,0 +1,35 @@
+@startuml
+title Attijari Compass - Cas d'utilisation principaux
+
+left to right direction
+skinparam shadowing false
+skinparam actorStyle stick
+
+actor "Visiteur" as Visitor
+actor "Utilisateur" as User
+actor "Admin" as Admin
+actor "IA / ML" as AI
+
+rectangle "Attijari Compass" {
+  usecase "S'inscrire / se connecter" as Auth
+  usecase "Suivre transactions" as Tx
+  usecase "Gerer cartes" as Cards
+  usecase "Budgets et objectifs" as BudgetGoals
+  usecase "Dashboard et rapports" as Dash
+  usecase "Recommandations\net simulateurs" as RecoSim
+  usecase "Chatbot financier" as Chat
+  usecase "Administration" as AdminUC
+}
+
+Visitor --> Auth
+User --> Tx
+User --> Cards
+User --> BudgetGoals
+User --> Dash
+User --> RecoSim
+User --> Chat
+Admin --> AdminUC
+Admin --|> User
+AI --> RecoSim
+AI --> Chat
+@enduml

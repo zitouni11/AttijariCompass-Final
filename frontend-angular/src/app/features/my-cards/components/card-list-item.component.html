@@ -1,0 +1,76 @@
+<article class="linked-bank-card cards-bank-card cards-bank-card-real" (click)="open()">
+  <div class="linked-card-top cards-bank-card-top">
+    <div class="cards-badge-row">
+      <span class="cards-card-chip">{{ getDisplayCardCode(card) }}</span>
+      @if (card.primaryCard) {
+        <span class="cards-soft-pill">{{ resolvePrimaryCardLabel(card.primaryCard) }}</span>
+      }
+    </div>
+
+    <span
+      class="cards-status-pill"
+      [class.cards-status-active]="resolveCardStatusTone(card) === 'active'"
+      [class.cards-status-pending]="resolveCardStatusTone(card) === 'pending'"
+      [class.cards-status-blocked]="resolveCardStatusTone(card) === 'blocked' || resolveCardStatusTone(card) === 'inactive'"
+    >
+      {{ resolveCardStatusLabel(card) }}
+    </span>
+  </div>
+
+  <div class="linked-card-body">
+    <figure class="linked-card-image-frame">
+      @if (getCardImage(card); as imageUrl) {
+        @if (!imageFailed) {
+          <img
+            class="linked-card-real-image"
+            [src]="imageUrl"
+            [alt]="resolveCardDisplayName(card)"
+            loading="lazy"
+            (error)="onCardImageError()"
+          />
+        } @else {
+          <div class="cards-real-fallback">
+            <span class="material-symbols-rounded">credit_card</span>
+            <strong>{{ resolveCardDisplayName(card) }}</strong>
+          </div>
+        }
+      } @else {
+        <div class="cards-real-fallback">
+          <span class="material-symbols-rounded">credit_card</span>
+          <strong>{{ resolveCardDisplayName(card) }}</strong>
+        </div>
+      }
+    </figure>
+
+    <div class="linked-card-info">
+      <div class="cards-bank-card-body">
+        <strong>{{ resolveCardDisplayName(card) }}</strong>
+        <p>{{ card.cardHolderName || 'Titulaire non renseigné' }}</p>
+      </div>
+
+      <div class="cards-bank-card-number">{{ getMaskedCardNumber(card) }}</div>
+
+      <div class="cards-bank-card-meta">
+        <div>
+          <span>Last 4</span>
+          <strong>{{ card.last4 }}</strong>
+        </div>
+        <div>
+          <span>Expiration</span>
+          <strong>{{ formatCardExpiry(card.expiryMonth, card.expiryYear) }}</strong>
+        </div>
+      </div>
+
+      <div class="cards-bank-card-actions">
+        <button type="button" class="cards-ghost-btn cards-ghost-btn-light" (click)="requestDisconnect($event)" [disabled]="deleting">
+          @if (deleting) {
+            <span class="cards-spinner cards-spinner-small"></span>
+          }
+          <span>{{ deleting ? 'Dissociation...' : 'Dissocier' }}</span>
+        </button>
+
+        <span class="cards-inline-link">Voir le détail</span>
+      </div>
+    </div>
+  </div>
+</article>

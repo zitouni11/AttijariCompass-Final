@@ -1,0 +1,356 @@
+<div class="budgets-page-shell">
+  <section class="budgets-hero-shell">
+    <div class="budgets-hero-copy">
+      <span class="budgets-kicker">Pilotage budgetaire</span>
+      <h1>Mes budgets</h1>
+      <p>Pilotez les cadres budgetaires actives pour mieux maitriser votre trajectoire financiere.</p>
+
+      <div class="budgets-hero-premium-note">
+        <span class="material-symbols-rounded">workspace_premium</span>
+        <p>{{ budgetCreationHint() }}</p>
+      </div>
+    </div>
+
+    <div class="budgets-hero-actions">
+      <button type="button" class="budgets-primary-btn" (click)="loadBudgets()" [disabled]="loading()">
+        @if (showInlineRefreshState()) {
+          <span class="budgets-spinner"></span>
+        } @else {
+          <span class="material-symbols-rounded">refresh</span>
+        }
+        <span>{{ showInlineRefreshState() ? 'Actualisation...' : 'Rafraichir' }}</span>
+      </button>
+    </div>
+  </section>
+
+  @if (showInitialLoader()) {
+    <section class="budgets-feedback budgets-feedback-block budgets-loading-inline">
+      <span class="budgets-spinner budgets-spinner-dark"></span>
+      <div>
+        <strong>Chargement de vos budgets</strong>
+        <p>Lecture en cours de vos cadres budgetaires actifs.</p>
+      </div>
+    </section>
+
+    <section class="budgets-list-grid">
+      @for (item of [0, 1, 2]; track item) {
+        <article class="budgets-budget-card budgets-skeleton-card"></article>
+      }
+    </section>
+  } @else if (errorMessage() && !hasBudgets()) {
+    <section class="budgets-feedback budgets-feedback-danger budgets-feedback-block">
+      <span class="material-symbols-rounded">error</span>
+      <div>
+        <strong>Chargement interrompu</strong>
+        <p>{{ errorMessage() }}</p>
+      </div>
+      <button type="button" class="budgets-secondary-btn" (click)="loadBudgets()">
+        Reessayer
+      </button>
+    </section>
+  } @else {
+    @if (showErrorBanner()) {
+      <div class="budgets-feedback budgets-feedback-danger">
+        <span class="material-symbols-rounded">error</span>
+        <div>
+          <strong>Lecture partiellement interrompue</strong>
+          <p>{{ errorMessage() }}</p>
+        </div>
+        <button type="button" class="budgets-secondary-btn" (click)="loadBudgets()" [disabled]="loading()">
+          Reessayer
+        </button>
+      </div>
+    }
+
+    <section class="budget-definition-panel">
+      <div class="budgets-section-head budget-definition-head">
+        <div>
+          <span class="budgets-kicker">Definir un budget</span>
+          <h2>Configurer un cadre budgetaire</h2>
+          <p>
+            Selectionnez une categorie, puis definissez le montant mensuel et le niveau de controle.
+          </p>
+        </div>
+      </div>
+
+      <app-budget-definition-modal
+        [embedded]="true"
+        [budgets]="budgets()"
+        [guidedData]="null"
+        (budgetsMutated)="onBudgetDefinitionMutated()"
+      ></app-budget-definition-modal>
+    </section>
+
+    @if (!hasActiveBudgets()) {
+      <section class="budgets-empty-state">
+        <div class="budgets-empty-visual">
+          <span class="material-symbols-rounded">savings</span>
+        </div>
+
+        <div class="budgets-empty-copy">
+          <span class="budgets-kicker">Activation</span>
+          <h2>Aucun budget actif pour le moment</h2>
+          <p>Selectionnez une categorie ci-dessus pour definir votre premier cadre budgetaire.</p>
+
+          @if (historicalBudgetCount()) {
+            <small>{{ historicalBudgetCount() }} cadre(s) precedent(s) restent disponibles dans votre historique backend.</small>
+          }
+        </div>
+      </section>
+    } @else {
+      <section class="budgets-surface-shell active-budgets-panel">
+        <div class="budgets-section-head">
+          <div>
+            <span class="budgets-kicker">Cadres actifs</span>
+            <h2>Mes budgets en pilotage</h2>
+            <p>Chaque carte expose la categorie, le niveau retenu, le plafond cible et la provenance du cadre actif.</p>
+          </div>
+
+          <div class="budgets-page-topbar">
+            <div class="budgets-filters" role="tablist" aria-label="Filtrer les budgets">
+              @for (filter of filterOptions(); track filter.key) {
+                <button
+                  type="button"
+                  class="budgets-filter-chip"
+                  [class.active]="isFilterSelected(filter.key)"
+                  [attr.aria-pressed]="isFilterSelected(filter.key)"
+                  (click)="setFilter(filter.key)"
+                >
+                  <span>{{ filter.label }}</span>
+                  <strong>{{ filter.count }}</strong>
+                </button>
+              }
+            </div>
+
+            <label class="budgets-sort-shell">
+              <span>Trier</span>
+              <select
+                #sortSelect
+                class="budgets-sort-select"
+                [value]="selectedSort()"
+                (change)="setSort(sortSelect.value)"
+              >
+                @for (option of sortOptions; track option.key) {
+                  <option [value]="option.key">{{ option.label }}</option>
+                }
+              </select>
+            </label>
+          </div>
+        </div>
+
+        @if (!visibleBudgets().length) {
+          <div class="budgets-empty-inline">
+            <span class="material-symbols-rounded">filter_alt_off</span>
+            <div>
+              <strong>Aucun budget actif dans ce filtre</strong>
+              <p>Revenez a l ensemble de vos cadres pour retrouver tous les budgets actuellement actifs.</p>
+            </div>
+            <button type="button" class="budgets-secondary-btn" (click)="resetFilters()">
+              Afficher tous les budgets
+            </button>
+          </div>
+        } @else {
+          <div class="budgets-list-grid">
+            @for (budget of visibleBudgets(); track trackBudget($index, budget)) {
+              <article
+                class="budgets-budget-card"
+                [attr.id]="'budget-card-' + budget.id"
+                [class.level-prudent]="budget.levelTone === 'prudent'"
+                [class.level-equilibre]="budget.levelTone === 'equilibre'"
+                [class.level-renforce]="budget.levelTone === 'renforce'"
+                [class.monitoring-sous-controle]="budget.monitoringTone === 'sous-controle'"
+                [class.monitoring-a-surveiller]="budget.monitoringTone === 'a-surveiller'"
+                [class.monitoring-depasse]="budget.monitoringTone === 'depasse'"
+                [class.is-highlighted]="isBudgetHighlighted(budget.id)"
+              >
+                <div class="budgets-card-head">
+                  <div class="budgets-card-heading">
+                    <span class="budgets-card-icon material-symbols-rounded">{{ budget.categoryIcon }}</span>
+
+                    <div>
+                      <div class="budgets-badge-row">
+                        <span class="budgets-micro-pill budgets-micro-pill-category">{{ budget.categoryLabel }}</span>
+                        @if (budget.isAiGenerated) {
+                          <span class="budgets-micro-pill budgets-micro-pill-ai">Cree depuis l IA</span>
+                        }
+                        @if (budget.hasMonitoring && budget.isExceeded) {
+                          <span class="budgets-micro-pill budgets-micro-pill-alert">Alerte mensuelle</span>
+                        }
+                      </div>
+
+                      <h3>{{ budget.levelLabel }}</h3>
+                      <p>{{ budget.contextualLine }}</p>
+                    </div>
+                  </div>
+
+                  <div class="budgets-badge-row budgets-badge-row-end">
+                    <span class="budgets-status-pill" [class]="'status-' + budget.statusTone">
+                      {{ budget.statusLabel }}
+                    </span>
+                    <span class="budgets-level-pill" [class]="'tone-' + budget.levelTone">
+                      {{ budget.levelLabel }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="budgets-amount-block">
+                  <span>Montant cible mensuel</span>
+                  <strong>{{ budget.targetAmountLabel }}</strong>
+                </div>
+
+                @if (budget.hasMonitoring) {
+                  <section class="budgets-monitoring-shell" [class]="'tone-' + budget.monitoringTone">
+                    <div class="budgets-monitoring-head">
+                      <div class="budgets-monitoring-copy">
+                        <span class="budgets-monitoring-kicker">Suivi du mois</span>
+                        <strong>{{ budget.monitoringMessage }}</strong>
+                      </div>
+
+                      <span class="budgets-monitoring-pill" [class]="'tone-' + budget.monitoringTone">
+                        {{ budget.monitoringLabel }}
+                      </span>
+                    </div>
+
+                    <div class="budgets-monitoring-grid">
+                      <article class="budgets-monitoring-metric">
+                        <span>Depense ce mois</span>
+                        <strong>{{ budget.spentThisMonthLabel }}</strong>
+                      </article>
+
+                      <article class="budgets-monitoring-metric">
+                        <span>Reste disponible</span>
+                        <strong>{{ budget.remainingAmountLabel }}</strong>
+                      </article>
+
+                      <article class="budgets-monitoring-metric">
+                        <span>Consommation</span>
+                        <strong>{{ budget.usagePercentLabel }}</strong>
+                      </article>
+                    </div>
+
+                    <div class="budgets-progress-shell">
+                      <div class="budgets-progress-meta">
+                        <span>Progression du mois</span>
+                        <strong>{{ budget.usagePercentLabel }}</strong>
+                      </div>
+
+                      <div
+                        class="budgets-progress-track"
+                        role="progressbar"
+                        [attr.aria-label]="'Consommation du budget ' + budget.categoryLabel"
+                        [attr.aria-valuemin]="0"
+                        [attr.aria-valuemax]="100"
+                        [attr.aria-valuenow]="budget.progressAriaValue"
+                      >
+                        <div
+                          class="budgets-progress-fill"
+                          [class]="'tone-' + budget.monitoringTone"
+                          [style.width.%]="budget.progressWidth"
+                        ></div>
+                      </div>
+                    </div>
+
+                    @if (budget.isExceeded) {
+                      <div class="budgets-monitoring-alert">
+                        <span class="material-symbols-rounded">warning</span>
+                        <p>Une action rapide est recommandee pour remettre cette categorie dans son cadre.</p>
+                      </div>
+                    }
+                  </section>
+                }
+
+                <div class="budgets-metrics-grid">
+                  <div class="budgets-metric-card">
+                    <span>Creation</span>
+                    <strong>{{ budget.createdAtLabel }}</strong>
+                  </div>
+                  <div class="budgets-metric-card">
+                    <span>Cadre</span>
+                    <strong>{{ budget.levelSummary }}</strong>
+                  </div>
+                </div>
+
+                <div class="budgets-card-actions">
+                  <button
+                    type="button"
+                    class="budgets-danger-btn"
+                    (click)="requestDisableBudget(budget)"
+                    [disabled]="updatingBudgetId() === budget.id"
+                  >
+                    @if (updatingBudgetId() === budget.id) {
+                      <span class="budgets-spinner budgets-spinner-dark"></span>
+                    } @else {
+                      <span class="material-symbols-rounded">pause_circle</span>
+                    }
+                    <span>{{ updatingBudgetId() === budget.id ? 'Desactivation...' : 'Desactiver' }}</span>
+                  </button>
+                </div>
+
+              </article>
+            }
+          </div>
+        }
+      </section>
+    }
+  }
+
+  @if (pendingDisableBudget(); as budget) {
+    <div class="budgets-dialog-backdrop" (click)="closeDisableDialog()">
+      <section class="budgets-dialog" (click)="$event.stopPropagation()">
+        <span class="budgets-kicker">Confirmation</span>
+        <h3>Desactiver {{ budget.categoryLabel }}</h3>
+        <p>Le cadre restera en historique mais ne sera plus considere comme actif dans votre pilotage courant.</p>
+
+        <div class="budgets-dialog-summary">
+          <div>
+            <span>Niveau</span>
+            <strong>{{ budget.levelLabel }}</strong>
+          </div>
+          <div>
+            <span>Montant</span>
+            <strong>{{ budget.targetAmountLabel }}</strong>
+          </div>
+          <div>
+            <span>Source</span>
+            <strong>{{ budget.sourceLabel }}</strong>
+          </div>
+        </div>
+
+        @if (disableErrorMessage()) {
+          <div class="budgets-feedback budgets-feedback-danger budgets-feedback-inline">
+            <span class="material-symbols-rounded">warning</span>
+            <div>
+              <strong>Mise a jour impossible</strong>
+              <p>{{ disableErrorMessage() }}</p>
+            </div>
+          </div>
+        }
+
+        <div class="budgets-dialog-actions">
+          <button
+            type="button"
+            class="budgets-secondary-btn"
+            (click)="closeDisableDialog()"
+            [disabled]="updatingBudgetId() === budget.id"
+          >
+            Fermer
+          </button>
+
+          <button
+            type="button"
+            class="budgets-danger-btn"
+            (click)="confirmDisableBudget()"
+            [disabled]="updatingBudgetId() === budget.id"
+          >
+            @if (updatingBudgetId() === budget.id) {
+              <span class="budgets-spinner budgets-spinner-dark"></span>
+            } @else {
+              <span class="material-symbols-rounded">pause_circle</span>
+            }
+            <span>{{ updatingBudgetId() === budget.id ? 'Desactivation...' : 'Confirmer la desactivation' }}</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

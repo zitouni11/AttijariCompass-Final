@@ -1,0 +1,200 @@
+@if (isOpen()) {
+  <div class="storytelling-overlay" (click)="closeFromBackdrop($event)">
+    <section
+      class="storytelling-panel"
+      [class.state-listening]="isListening()"
+      [class.state-thinking]="isThinking()"
+      [class.state-speaking]="isSpeaking()"
+      aria-label="Assistant storytelling"
+      aria-modal="true"
+      role="dialog"
+    >
+      <header class="panel-header">
+        <div>
+          <p class="eyebrow">Storytelling Assistant</p>
+          <h2>Assistant financier multilingue</h2>
+        </div>
+
+        <div class="header-actions">
+          <span class="state-chip">{{ stateLabel() }}</span>
+          <button class="icon-button" type="button" (click)="requestClose()" aria-label="Fermer">
+            Fermer
+          </button>
+        </div>
+      </header>
+
+      <div class="panel-body">
+        <aside class="assistant-stage">
+          <div class="assistant-card">
+            <div class="assistant-aura"></div>
+
+            <div
+              class="character-shell"
+              [class.speaking]="isSpeaking()"
+              [class.listening]="isListening()"
+            >
+              <img
+                class="character-image"
+                [src]="currentCharacterImage()"
+                [alt]="eyesClosed() ? 'Assistant yeux fermes' : 'Assistant yeux ouverts'"
+                (error)="onCharacterImageError()"
+              />
+            </div>
+
+            <div class="assistant-presence">
+              <p class="assistant-name">Noura</p>
+              <p class="assistant-role">Assistant storytelling bancaire</p>
+            </div>
+
+            <div class="assistant-status">
+              <span class="status-dot"></span>
+              <span>{{ stateLabel() }}</span>
+            </div>
+          </div>
+
+          <div class="assistant-notes">
+            <div class="objective-editor">
+              <label class="objective-label" for="storytelling-objective">Objectif utilisateur</label>
+              <input
+                id="storytelling-objective"
+                class="objective-input"
+                type="text"
+                [ngModel]="userObjective()"
+                (ngModelChange)="userObjective.set($event)"
+                placeholder="Exemple : optimiser mon budget ou prepare a savings goal"
+              />
+            </div>
+
+            <div class="meta-grid">
+              <div class="meta-card">
+                <span>Emotion</span>
+                <strong>{{ lastEmotion() || 'neutral' }}</strong>
+              </div>
+              <div class="meta-card">
+                <span>Action</span>
+                <strong>{{ lastAction() || 'listen' }}</strong>
+              </div>
+              <div class="meta-card">
+                <span>Intent</span>
+                <strong>{{ lastIntent() || 'conversation' }}</strong>
+              </div>
+            </div>
+
+            @if (financialContextPreview().length > 0) {
+              <div class="context-block">
+                <p class="context-title">Financial context envoye au backend</p>
+                <div class="context-list">
+                  @for (item of financialContextPreview(); track item.key) {
+                    <div class="context-item">
+                      <span>{{ item.key }}</span>
+                      <strong>{{ item.value }}</strong>
+                    </div>
+                  }
+                </div>
+              </div>
+            } @else {
+              <p class="context-empty">
+                Aucun financial context connecte pour le moment. Le payload sera envoye sans contexte additionnel.
+              </p>
+            }
+          </div>
+        </aside>
+
+        <section class="conversation-card">
+          <div class="conversation-header">
+            <div>
+              <h3>Conversation</h3>
+              <p>Chaque message envoie `message`, `userObjective`, `conversationHistory` et `financialContext` au backend.</p>
+            </div>
+          </div>
+
+          <div #messagesViewport class="messages-viewport">
+            @for (message of messages(); track trackMessage($index, message)) {
+              <article
+                class="message-bubble"
+                [class.user]="message.role === 'user'"
+                [attr.dir]="message.direction"
+                [attr.lang]="message.language"
+              >
+                <p class="message-author">
+                  {{ message.role === 'assistant' ? 'Assistant' : 'Vous' }}
+                </p>
+                <p class="message-text">{{ message.text }}</p>
+
+                @if (message.role === 'assistant' && (message.emotion || message.action || message.intent)) {
+                  <div class="message-meta">
+                    @if (message.emotion) {
+                      <span>{{ message.emotion }}</span>
+                    }
+                    @if (message.action) {
+                      <span>{{ message.action }}</span>
+                    }
+                    @if (message.intent) {
+                      <span>{{ message.intent }}</span>
+                    }
+                  </div>
+                }
+
+                <time class="message-time">
+                  {{ message.createdAt | date: 'HH:mm' }}
+                </time>
+              </article>
+            }
+
+            @if (isThinking()) {
+              <div class="thinking-bubble">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            }
+          </div>
+
+          <div class="composer-card">
+            <label class="composer-label" for="storytelling-message">
+              Votre message
+            </label>
+
+            <textarea
+              #messageInput
+              id="storytelling-message"
+              class="composer-input"
+              rows="3"
+              [attr.dir]="composerDirection()"
+              [ngModel]="draft()"
+              (ngModelChange)="draft.set($event)"
+              (keydown)="handleComposerKeydown($event)"
+              placeholder="Exemple : aide-moi a mieux repartir mon budget mensuel"
+            ></textarea>
+
+            <div class="composer-actions">
+              <button
+                class="secondary-button"
+                type="button"
+                (click)="toggleListening()"
+                [disabled]="!canUseSpeechRecognition() || isThinking()"
+              >
+                {{ isListening() ? 'Arreter le micro' : 'Parler au micro' }}
+              </button>
+
+              <button
+                class="primary-button"
+                type="button"
+                (click)="sendMessage()"
+                [disabled]="!draft().trim() || isThinking()"
+              >
+                {{ isThinking() ? 'Envoi...' : 'Envoyer' }}
+              </button>
+            </div>
+
+            @if (!canUseSpeechRecognition()) {
+              <p class="composer-help">
+                Le navigateur actuel ne propose pas Speech Recognition. Le chat texte reste disponible.
+              </p>
+            }
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+}

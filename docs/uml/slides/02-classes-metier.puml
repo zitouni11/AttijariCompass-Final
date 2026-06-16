@@ -1,0 +1,27 @@
+@startuml
+title Attijari Compass - Classes metier essentielles
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+hide members
+
+class User
+class Transaction
+class UserCard
+class CardCatalog
+class CardTransaction
+class BudgetTarget
+class FinancialGoal
+class UserNotificationState
+class RefreshToken
+
+User "1" -- "0..*" Transaction
+User "1" -- "0..*" UserCard
+User "1" -- "0..*" BudgetTarget
+User "1" -- "0..*" FinancialGoal
+User "1" -- "0..*" UserNotificationState
+User "1" -- "0..1" RefreshToken
+UserCard "1" -- "0..*" CardTransaction
+UserCard "0..1" -- "0..*" Transaction
+CardCatalog "1" -- "0..*" UserCard
+@enduml

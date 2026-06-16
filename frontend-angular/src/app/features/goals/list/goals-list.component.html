@@ -1,0 +1,216 @@
+<section class="goals-page">
+  <header class="goals-hero">
+    <div class="hero-copy">
+      <span class="hero-kicker">Objectifs personnels</span>
+      <h1>Mes objectifs financiers</h1>
+      <p>Planifiez, suivez et atteignez vos projets avec une vision claire.</p>
+    </div>
+
+    <div class="hero-actions">
+      <a routerLink="/goals/new" class="hero-primary-btn">
+        <span class="material-symbols-rounded">add</span>
+        <span>Nouvel objectif</span>
+      </a>
+    </div>
+  </header>
+
+  <section class="kpi-grid">
+    <article class="kpi-card">
+      <span class="material-symbols-rounded kpi-icon">flag</span>
+      <div class="kpi-copy">
+        <span class="kpi-label">Objectifs actifs</span>
+        <strong>{{ activeGoalsCount() }}</strong>
+      </div>
+    </article>
+
+    <article class="kpi-card">
+      <span class="material-symbols-rounded kpi-icon">payments</span>
+      <div class="kpi-copy">
+        <span class="kpi-label">Montant total cible</span>
+        <strong>{{ formatCurrency(totalTargetAmount()) }}</strong>
+      </div>
+    </article>
+
+    <article class="kpi-card">
+      <span class="material-symbols-rounded kpi-icon">savings</span>
+      <div class="kpi-copy">
+        <span class="kpi-label">Montant deja epargne</span>
+        <strong>{{ formatCurrency(totalCurrentAmount()) }}</strong>
+      </div>
+    </article>
+
+    <article class="kpi-card">
+      <span class="material-symbols-rounded kpi-icon">trending_up</span>
+      <div class="kpi-copy">
+        <span class="kpi-label">Progression moyenne</span>
+        <strong>{{ averageProgress() | number:'1.0-0' }}%</strong>
+      </div>
+    </article>
+  </section>
+
+  @if (loading()) {
+    <section class="goal-cards-grid">
+      @for (card of [1, 2, 3]; track card) {
+        <article class="goal-card skeleton-card"></article>
+      }
+    </section>
+  } @else if (goals().length === 0) {
+    <section class="empty-state-shell">
+      <article class="empty-state-card">
+        <div class="empty-icon-wrap">
+          <span class="material-symbols-rounded">emoji_events</span>
+        </div>
+        <h2>Aucun objectif defini pour le moment</h2>
+        <p>
+          Lancez votre premier cap financier pour suivre une epargne, preparer un projet
+          important et garder un rythme visible dans le temps.
+        </p>
+        <a routerLink="/goals/new" class="hero-primary-btn">
+          <span class="material-symbols-rounded">add_circle</span>
+          <span>Creer mon premier objectif</span>
+        </a>
+      </article>
+
+      <div class="inspiration-grid">
+        @for (item of inspirations; track item.title) {
+          <article class="inspiration-card">
+            <span class="material-symbols-rounded inspiration-icon">{{ item.icon }}</span>
+            <strong>{{ item.title }}</strong>
+            <p>{{ item.copy }}</p>
+          </article>
+        }
+      </div>
+    </section>
+  } @else {
+    <section class="goal-cards-grid">
+      @for (goal of goals(); track goal.id) {
+        <article class="goal-card">
+          <div class="goal-card-top">
+            <div class="goal-head">
+              <div class="goal-icon-wrap">
+                <span>{{ goalIcon(goal) }}</span>
+              </div>
+
+              <div class="goal-copy">
+                <div class="goal-title-row">
+                  <h2>{{ goalTitle(goal) }}</h2>
+                  <span class="health-badge" [class]="'health-' + goalHealthTone(goal)">
+                    {{ goalHealthLabel(goal) }}
+                  </span>
+                </div>
+
+                @if (goal.description) {
+                  <p>{{ goal.description }}</p>
+                } @else {
+                  <p>Un cap financier suivi dans Attijari Compass avec une trajectoire visible.</p>
+                }
+
+                <div class="goal-meta-row">
+                  <span class="meta-pill">
+                    <span class="material-symbols-rounded">sell</span>
+                    <span>{{ goalType(goal.type) }}</span>
+                  </span>
+                  <span class="meta-pill">
+                    <span class="material-symbols-rounded">calendar_month</span>
+                    <span>{{ formatDate(goal.targetDate) }}</span>
+                  </span>
+                  <span class="meta-pill">
+                    <span class="material-symbols-rounded">schedule</span>
+                    <span>{{ daysRemaining(goal) }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="goal-amount-panel">
+            <div>
+              <span class="amount-label">Montant actuel</span>
+              <strong>{{ formatCurrency(goal.currentAmount) }}</strong>
+            </div>
+            <div>
+              <span class="amount-label">Montant cible</span>
+              <strong>{{ formatCurrency(goal.targetAmount) }}</strong>
+            </div>
+            <div>
+              <span class="amount-label">Reste a couvrir</span>
+              <strong>{{ formatCurrency(goal.remainingAmount) }}</strong>
+            </div>
+          </div>
+
+          <div class="progress-block">
+            <div class="progress-row">
+              <span class="progress-title">Progression</span>
+              <span class="progress-value">{{ goal.progressPercentage | number:'1.0-0' }}%</span>
+            </div>
+
+            <div class="progress-track">
+              <div
+                class="progress-fill"
+                [class]="progressClass(goal.progressPercentage)"
+                [style.width.%]="goal.progressPercentage">
+              </div>
+            </div>
+
+            <p class="progress-hint">{{ goalProgressHint(goal) }}</p>
+          </div>
+
+          <div class="goal-insights-grid">
+            <article class="insight-card">
+              <span class="insight-label">Statut natif</span>
+              <strong>{{ goalStatusLabel(goal.status) }}</strong>
+            </article>
+
+            <article class="insight-card">
+              <span class="insight-label">Epargne mensuelle estimee</span>
+              <strong>{{ formatCurrency(goal.monthlySavingsRequired) }}</strong>
+            </article>
+          </div>
+
+          @if (canAddProgress(goal)) {
+            <div class="progress-entry">
+              <label [for]="'progress-' + goal.id">Ajouter une progression</label>
+              <div class="progress-entry-row">
+                <input
+                  [id]="'progress-' + goal.id"
+                  type="number"
+                  min="0"
+                  step="10"
+                  placeholder="Montant ajoute"
+                  [ngModel]="progressAmounts()[goal.id]"
+                  (ngModelChange)="setProgressAmount(goal.id, $event)" />
+                <button type="button" class="secondary-btn dark-btn" (click)="addProgress(goal)">
+                  Ajouter
+                </button>
+              </div>
+            </div>
+          }
+
+          <div class="goal-card-actions">
+            <a [routerLink]="['/goals', goal.id]" class="secondary-btn">
+              <span class="material-symbols-rounded">visibility</span>
+              <span>Voir detail</span>
+            </a>
+
+            <a [routerLink]="['/goals', goal.id, 'edit']" class="secondary-btn">
+              <span class="material-symbols-rounded">edit</span>
+              <span>Modifier</span>
+            </a>
+
+            <button type="button" class="secondary-btn danger-btn" (click)="delete(goal)">
+              <span class="material-symbols-rounded">delete</span>
+              <span>Supprimer</span>
+            </button>
+
+            @if (hasAiInsights(goal)) {
+              <a [routerLink]="['/goals', goal.id]" class="secondary-btn highlight-btn">
+                <span class="material-symbols-rounded">auto_awesome</span>
+                <span>Voir recommandation IA</span>
+              </a>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+</section>

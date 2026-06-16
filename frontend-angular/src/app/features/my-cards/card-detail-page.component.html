@@ -1,0 +1,84 @@
+<div class="card-detail-shell">
+  <div class="cards-page-topbar">
+    <button type="button" class="cards-secondary-btn" (click)="goBack()">
+      <span class="material-symbols-rounded">arrow_back</span>
+      <span>Retour aux cartes liees</span>
+    </button>
+  </div>
+
+  @if (pageError()) {
+    <div class="cards-feedback cards-feedback-danger">
+      <span class="material-symbols-rounded">error</span>
+      <div>
+        <strong>Detail indisponible</strong>
+        <p>{{ pageError() }}</p>
+      </div>
+      <button type="button" class="cards-secondary-btn" (click)="goBack()">Revenir</button>
+    </div>
+  } @else {
+    @if (loading()) {
+      <div class="cards-detail-loading">
+        <div class="cards-skeleton-card cards-skeleton-card-wide"></div>
+        <div class="cards-skeleton-card cards-skeleton-card-wide"></div>
+      </div>
+    } @else {
+      @if (card(); as currentCard) {
+        <app-card-summary-header
+          [card]="currentCard"
+          [deleting]="deleting()"
+          (disconnectRequested)="openDeleteDialog()"
+        />
+
+        <section class="cards-detail-metrics cards-detail-metrics-trimmed">
+          <article class="cards-stat-card cards-stat-card-strong">
+            <span>Statut</span>
+            <strong>{{ resolveCardStatusLabel(currentCard) }}</strong>
+            <small>Lecture actuelle de la carte dans votre espace client.</small>
+          </article>
+
+          <article class="cards-stat-card">
+            <span>Date de liaison</span>
+            <strong>{{ formatDate(currentCard.linkedAt) }}</strong>
+            <small>Moment ou la carte a ete liee a votre espace.</small>
+          </article>
+
+          <article class="cards-stat-card">
+            <span>Portee</span>
+            <strong>{{ resolvePrimaryCardLabel(currentCard.primaryCard) }}</strong>
+            <small>Indique si la carte est principale ou secondaire.</small>
+          </article>
+        </section>
+
+        <app-card-transactions-table
+          [transactions]="transactions()"
+          [loading]="false"
+          [errorMessage]="transactionsError()"
+        />
+      }
+    }
+  }
+
+  @if (card(); as currentCard) {
+    @if (deleteDialogOpen()) {
+      <div class="cards-dialog-backdrop" (click)="closeDeleteDialog()">
+        <section class="cards-delete-dialog" (click)="$event.stopPropagation()">
+          <span class="cards-kicker">Dissociation</span>
+          <h3>Dissocier {{ displayName() }}</h3>
+          <p>La carte {{ currentCard.maskedCardNumber }} sera retiree de votre espace Mes Cartes. Vous pourrez l associer a nouveau plus tard si besoin.</p>
+
+          <div class="cards-delete-actions">
+            <button type="button" class="cards-secondary-btn" (click)="closeDeleteDialog()" [disabled]="deleting()">
+              Annuler
+            </button>
+            <button type="button" class="cards-danger-btn" (click)="confirmDelete()" [disabled]="deleting()">
+              @if (deleting()) {
+                <span class="cards-spinner cards-spinner-small"></span>
+              }
+              <span>{{ deleting() ? 'Dissociation...' : 'Confirmer' }}</span>
+            </button>
+          </div>
+        </section>
+      </div>
+    }
+  }
+</div>

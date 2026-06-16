@@ -1,0 +1,108 @@
+<div class="modal-overlay" (click)="closeFromBackdrop($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendation-security-title">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">Stabilite financiere</span>
+        <h2 id="recommendation-security-title">{{ data.title }}</h2>
+        <p>{{ data.subtitle }}</p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close()" aria-label="Fermer">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </header>
+
+    <div class="meta-row">
+      <span class="meta-pill">{{ data.sourceLabel }}</span>
+      <span class="meta-pill priority-pill" [ngClass]="data.priorityToneClass">{{ data.priorityLabel }}</span>
+      <span class="meta-pill">{{ data.confidenceLabel }}</span>
+      <span class="meta-pill">Effort {{ data.effortLabel }}</span>
+    </div>
+
+    <div class="modal-grid">
+      <div class="modal-column">
+        <article class="summary-card summary-card-emphasis">
+          <span class="card-label">Impact principal</span>
+          <strong>{{ data.mainImpactLabel }}</strong>
+          <p>{{ data.recommendationTitle }}</p>
+        </article>
+
+        <article class="summary-card">
+          <span class="card-label">Message de la recommandation</span>
+          <p class="action-copy">{{ data.message }}</p>
+        </article>
+
+        <article class="list-card">
+          <span class="card-label">Diagnostic</span>
+
+          <div class="bullet-list">
+            @for (item of data.diagnosis; track item) {
+              <div class="bullet-item">
+                <span class="bullet-dot"></span>
+                <span>{{ item }}</span>
+              </div>
+            }
+          </div>
+        </article>
+
+        <article class="list-card">
+          <span class="card-label">Plan recommande</span>
+
+          <div class="bullet-list">
+            @for (step of data.planSteps; track step) {
+              <div class="bullet-item">
+                <span class="bullet-dot"></span>
+                <span>{{ step }}</span>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+
+      <section class="levels-panel">
+        <div class="levels-head">
+          <span class="card-label">Cadre suggere</span>
+          <h3>Choisir un niveau de reserve</h3>
+          <p>Ce cadrage reste frontend pour l instant, mais donne un cap concret a preparer.</p>
+        </div>
+
+        <div class="levels-list">
+          @for (level of data.reserveLevels; track level.key) {
+            <button
+              type="button"
+              class="level-option"
+              [class.is-active]="isSelectedLevel(level.key)"
+              (click)="selectLevel(level.key)"
+            >
+              <div class="level-head">
+                <strong>{{ level.label }}</strong>
+                @if (level.recommended) {
+                  <span class="level-badge">IA</span>
+                }
+              </div>
+
+              <strong class="level-target">{{ level.targetLabel }}</strong>
+              <p>{{ level.description }}</p>
+            </button>
+          }
+        </div>
+
+        <article class="focus-card">
+          <span class="card-label">Action recommandee</span>
+          <strong>{{ selectedLevel?.label || 'Cadre a confirmer' }}</strong>
+          <span>{{ selectedLevel?.targetLabel || 'Niveau a definir' }}</span>
+          <p>{{ data.suggestedAction }}</p>
+        </article>
+      </section>
+    </div>
+
+    <footer class="modal-actions">
+      <button type="button" class="secondary-btn" (click)="close()">
+        Fermer
+      </button>
+      <button type="button" class="primary-btn" (click)="prepare()">
+        Preparer ce plan
+      </button>
+    </footer>
+  </section>
+</div>

@@ -1,0 +1,64 @@
+@startuml
+title Attijari Compass - Architecture globale de l'application
+
+skinparam shadowing false
+skinparam rectangle {
+  RoundCorner 8
+}
+
+actor "Utilisateur" as User
+actor "Administrateur" as Admin
+
+rectangle "Frontend Angular 17" as Front {
+  rectangle "Pages et composants" as Pages
+  rectangle "Services Angular" as NgServices
+  rectangle "Guards + Interceptor JWT" as NgSecurity
+}
+
+rectangle "Backend Spring Boot" as Back {
+  rectangle "Controllers REST" as Rest
+  rectangle "Couche securite\nJWT, roles, BCrypt" as Sec
+  rectangle "Services metier" as Biz
+  rectangle "Repositories JPA" as Jpa
+}
+
+database "PostgreSQL" as DB
+
+rectangle "Microservice ML FastAPI" as ML {
+  rectangle "Prediction categorie\nTF-IDF + LogisticRegression" as Predict
+  rectangle "Datasets CSV/Excel\nModele joblib" as Dataset
+}
+
+rectangle "Chatbot RAG / LLM" as AI {
+  rectangle "Construction du contexte\nfinancier utilisateur" as Rag
+  cloud "Groq API" as Groq
+}
+
+rectangle "Reporting" as BI {
+  rectangle "Dashboard Angular" as Dash
+  rectangle "Reports API Spring" as Reports
+  rectangle "Power BI\nnon confirme dans le code" as PowerBI
+}
+
+User --> Front
+Admin --> Front
+Pages --> NgServices
+NgServices --> NgSecurity
+NgSecurity --> Rest : REST /api + JWT
+
+Rest --> Sec
+Rest --> Biz
+Biz --> Jpa
+Jpa --> DB
+
+Biz --> ML : categorisation
+Predict --> Dataset
+
+Biz --> Rag : donnees metier
+Rag --> DB
+Rag --> Groq
+
+Dash --> Reports
+Reports --> Biz
+BI --> PowerBI
+@enduml

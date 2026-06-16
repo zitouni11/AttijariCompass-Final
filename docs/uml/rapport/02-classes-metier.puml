@@ -1,0 +1,126 @@
+@startuml
+title Attijari Compass - Diagramme de classes metier
+
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+hide empty methods
+
+class User {
+  +Long id
+  +String email
+  +String password
+  +Role role
+  +LocalDateTime createdAt
+}
+
+class RefreshToken {
+  +Long id
+  +String token
+  +LocalDateTime expiryDate
+}
+
+class Transaction {
+  +Long id
+  +String description
+  +Double amount
+  +LocalDate date
+  +TransactionCategory category
+  +TransactionType type
+  +PaymentMethod paymentMethod
+  +TransactionSource source
+  +String merchantName
+  +Double categorizationConfidence
+}
+
+class TransactionCashBreakdown {
+  +Long id
+  +TransactionCategory category
+  +Double amount
+  +String note
+}
+
+class TransactionCategoryFeedback {
+  +Long id
+  +TransactionCategory originalCategory
+  +TransactionCategory correctedCategory
+}
+
+class UserCard {
+  +Long id
+  +String holderName
+  +String maskedCardNumber
+  +String last4
+  +CardType cardType
+  +CardStatus status
+  +CardSourceType sourceType
+  +LocalDateTime connectedAt
+  +LocalDateTime lastSyncAt
+}
+
+class CardCatalog {
+  +Long id
+  +String code
+  +String name
+  +String brand
+  +CardScope scope
+  +BigDecimal maxPaymentLimit
+  +boolean active
+}
+
+class CardPool {
+  +Long id
+  +String maskedCardNumber
+  +String last4
+  +String cardCode
+  +boolean assigned
+}
+
+class CardTransaction {
+  +Long id
+  +LocalDateTime transactionDate
+  +BigDecimal amount
+  +String merchantName
+  +String category
+  +TransactionStatus status
+}
+
+class BudgetTarget {
+  +Long id
+  +TransactionCategory category
+  +BudgetTargetSource source
+  +BigDecimal suggestedMonthlyAmount
+  +BudgetTargetLevel selectedLevel
+  +BudgetTargetStatus status
+}
+
+class FinancialGoal {
+  +Long id
+  +String name
+  +Double targetAmount
+  +Double currentAmount
+  +LocalDate targetDate
+  +GoalStatus status
+}
+
+class UserNotificationState {
+  +Long id
+  +String notificationKey
+  +boolean read
+  +boolean deleted
+}
+
+User "1" -- "0..*" Transaction
+User "1" -- "0..*" UserCard
+User "1" -- "0..*" BudgetTarget
+User "1" -- "0..*" FinancialGoal
+User "1" -- "0..*" UserNotificationState
+User "1" -- "0..1" RefreshToken
+
+UserCard "1" -- "0..*" CardTransaction
+UserCard "0..1" -- "0..*" Transaction
+CardCatalog "1" -- "0..*" UserCard
+CardCatalog "1" -- "0..*" CardPool
+Transaction "1" -- "0..*" TransactionCashBreakdown
+Transaction "1" -- "0..*" TransactionCategoryFeedback
+@enduml

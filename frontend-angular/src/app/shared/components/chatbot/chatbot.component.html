@@ -1,0 +1,170 @@
+<div class="chatbot-shell" [class.is-open]="isOpen()">
+  @if (isOpen()) {
+    <section class="chatbot-panel" aria-label="Attijari Compass AI">
+      <header class="chatbot-header">
+        <div class="chatbot-brand">
+          <span class="chatbot-mark">AI</span>
+
+          <div class="chatbot-brand-copy">
+            <span class="chatbot-kicker">Assistant financier premium</span>
+            <strong>Attijari Compass AI</strong>
+            <p>Posez une question claire sur vos revenus, depenses, budgets et priorites du mois.</p>
+          </div>
+        </div>
+
+        <div class="chatbot-header-actions">
+          <button class="chatbot-close" type="button" aria-label="Fermer le chatbot" (click)="close()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+      </header>
+
+      <div #messagesViewport class="chatbot-conversation" role="log" aria-live="polite">
+        @if (!hasConversation()) {
+          <section class="empty-state">
+            <span class="empty-state-kicker">Vision bancaire claire</span>
+            <h3>Un assistant IA elegant pour lire votre situation du mois sans bruit technique.</h3>
+            <p>
+              Attijari Compass AI repond a partir du backend existant et presente vos indicateurs du mois
+              dans un format plus lisible, plus stable et plus convaincant pour une demonstration.
+            </p>
+
+            <div class="starter-grid">
+              @for (question of starterQuestions; track question) {
+                <button
+                  class="starter-card"
+                  type="button"
+                  [disabled]="isLoading()"
+                  (click)="useStarterQuestion(question)"
+                >
+                  <span class="material-symbols-rounded">north_east</span>
+                  <span>{{ question }}</span>
+                </button>
+              }
+            </div>
+          </section>
+        } @else {
+          <div class="messages-list">
+            @for (message of messages(); track message.id) {
+              <article
+                class="message-row"
+                [class.is-user]="message.role === 'user'"
+                [class.is-assistant]="message.role === 'assistant'"
+                [class.is-loading]="message.state === 'loading'"
+                [class.is-error]="message.state === 'error'"
+              >
+                <div class="message-avatar">
+                  {{ message.role === 'user' ? 'VOUS' : 'AI' }}
+                </div>
+
+                <div class="message-card">
+                  <div class="message-card-head">
+                    <strong>{{ message.role === 'user' ? 'Vous' : 'Assistant Financier IA' }}</strong>
+                    <span>{{ formatTimestamp(message.timestamp) }}</span>
+                  </div>
+
+                  @if (message.state === 'loading') {
+                    <div class="loading-state">
+                      <span class="loading-spinner" aria-hidden="true"></span>
+                      <div class="loading-copy">
+                        <strong>Analyse de votre situation...</strong>
+                        <span>Attijari Compass AI prepare sa reponse.</span>
+                      </div>
+                    </div>
+                  } @else {
+                    <div class="message-body">
+                      @for (section of message.sections; track $index) {
+                        <section class="message-section" [class.has-title]="!!section.title">
+                          @if (section.title) {
+                            <h4>{{ section.title }}</h4>
+                          }
+
+                          @for (paragraph of section.paragraphs; track $index) {
+                            <p [innerHTML]="formatRichText(paragraph)"></p>
+                          }
+
+                          @if (section.bullets.length > 0) {
+                            <ul>
+                              @for (item of section.bullets; track $index) {
+                                <li [innerHTML]="formatRichText(item)"></li>
+                              }
+                            </ul>
+                          }
+
+                          @if (section.tables.length > 0) {
+                            @for (table of section.tables; track $index) {
+                              <div class="message-table-wrap">
+                                <table class="message-table">
+                                  <thead>
+                                    <tr>
+                                      @for (header of table.headers; track $index) {
+                                        <th [innerHTML]="formatRichText(header)"></th>
+                                      }
+                                    </tr>
+                                  </thead>
+
+                                  <tbody>
+                                    @for (row of table.rows; track trackTableRow($index)) {
+                                      <tr>
+                                        @for (cell of row; track $index) {
+                                          <td [innerHTML]="formatRichText(cell)"></td>
+                                        }
+                                      </tr>
+                                    }
+                                  </tbody>
+                                </table>
+                              </div>
+                            }
+                          }
+                        </section>
+                      }
+                    </div>
+                  }
+
+                  @if (message.role === 'assistant' && message.state === 'error' && message.retryMessage) {
+                    <button class="retry-button" type="button" (click)="retryMessage(message)">
+                      Reessayer cette question
+                    </button>
+                  }
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </div>
+
+      <footer class="chatbot-composer">
+        <div class="composer-form">
+          <label class="composer-field" for="chatbot-question">
+            <textarea
+              #composerInput
+              id="chatbot-question"
+              rows="2"
+              placeholder="Exemple : Quel est mon solde net du mois et quel budget dois-je surveiller en priorite ?"
+              [ngModel]="draft()"
+              (ngModelChange)="handleDraftChange($event, composerInput)"
+              (keydown)="handleComposerKeydown($event)"
+            ></textarea>
+          </label>
+
+          <button
+            class="send-button"
+            type="button"
+            [disabled]="!canSend()"
+            (click)="sendMessage()"
+          >
+            <span class="material-symbols-rounded">
+              {{ isLoading() ? 'hourglass_top' : 'north_east' }}
+            </span>
+            <span>{{ isLoading() ? 'Analyse' : 'Envoyer' }}</span>
+          </button>
+        </div>
+      </footer>
+    </section>
+  }
+
+  <button class="chatbot-trigger" type="button" (click)="toggle()" [attr.aria-expanded]="isOpen()">
+    <span class="material-symbols-rounded">{{ isOpen() ? 'close' : 'auto_awesome' }}</span>
+    <span>{{ isOpen() ? "Fermer l'assistant" : 'Assistant Financier IA' }}</span>
+  </button>
+</div>

@@ -1,0 +1,41 @@
+.git.backup-before-parent-repo/
+.m2/
+
+# Build outputs
+target/
+dist/
+out-tsc/
+build/
+
+# Dependencies
+node_modules/
+
+# Runtime and local files
+uploads/
+*.log
+*.err.log
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+
+# IDEs and OS files
+.idea/
+.vscode/
+.angular/cache/
+tmp/
+tmp-*/
+.DS_Store
+Thumbs.db
+
+# Java / Maven generated files
+*.class
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties

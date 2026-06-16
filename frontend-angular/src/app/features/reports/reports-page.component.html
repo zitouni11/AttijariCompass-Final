@@ -1,0 +1,195 @@
+<div class="reports-page">
+  <section class="reports-hero">
+    <div class="reports-copy">
+      <span class="reports-kicker">Reports</span>
+      <h1>Synthese mensuelle et cash breakdown</h1>
+      <p>
+        Cet ecran reprend la logique du projet Flask sous la forme du design Compass actuel:
+        comparaison budget / depenses, alertes du mois et lecture dediee aux mouvements en especes.
+      </p>
+    </div>
+
+    <div class="reports-controls">
+      <label class="reports-month-field">
+        <span>Mois analyse</span>
+        <input
+          type="month"
+          [ngModel]="selectedMonth()"
+          (ngModelChange)="onMonthChange($event)" />
+      </label>
+
+      <div class="reports-actions">
+        <a routerLink="/notifications" class="btn-secondary">Notifications</a>
+        <button type="button" class="btn-primary" (click)="reload()">Actualiser</button>
+      </div>
+    </div>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="reports-banner reports-banner-error">
+      <strong>Chargement incomplet.</strong>
+      <span>{{ errorMessage() }}</span>
+    </div>
+  }
+
+  @if (loading()) {
+    <section class="reports-summary-grid">
+      @for (item of [1, 2, 3, 4, 5]; track item) {
+        <article class="metric-card metric-card-skeleton"></article>
+      }
+    </section>
+  } @else if (!summary()) {
+    <section class="reports-empty">
+      <span class="material-symbols-rounded">monitoring</span>
+      <h2>Aucune synthese disponible</h2>
+      <p>Ajoutez ou importez des transactions pour produire le report mensuel complet.</p>
+      <div class="reports-actions">
+        <a routerLink="/transactions/new" class="btn-primary">Nouvelle transaction</a>
+        <a routerLink="/transactions" class="btn-secondary">Importer</a>
+      </div>
+    </section>
+  } @else {
+    <section class="reports-summary-grid">
+      <article class="metric-card">
+        <span class="metric-label">Revenus</span>
+        <strong>{{ formatMoney(summary()?.income) }}</strong>
+        <p>{{ summary()?.monthLabel }}</p>
+      </article>
+
+      <article class="metric-card">
+        <span class="metric-label">Depenses</span>
+        <strong>{{ formatMoney(summary()?.expenses) }}</strong>
+        <p>{{ summary()?.trackedTransactions }} transaction(s) suivies</p>
+      </article>
+
+      <article class="metric-card" [class]="'metric-card-' + netTone()">
+        <span class="metric-label">Net</span>
+        <strong>{{ formatMoney(summary()?.netBalance) }}</strong>
+        <p>Taux d epargne: {{ formatPercent(summary()?.savingsRate) }}</p>
+      </article>
+
+      <article class="metric-card">
+        <span class="metric-label">Alertes</span>
+        <strong>{{ summary()?.alertCount }}</strong>
+        <p>Signaux budgetaires detectes ce mois-ci</p>
+      </article>
+
+      <article class="metric-card">
+        <span class="metric-label">Especes</span>
+        <strong>{{ formatMoney(cashBreakdown()?.totalCashExpenses) }}</strong>
+        <p>{{ formatPercent(cashBreakdown()?.shareOfExpenses) }} des depenses du mois</p>
+      </article>
+    </section>
+
+    <section class="reports-grid">
+      <article class="report-card">
+        <div class="report-card-head">
+          <div>
+            <span class="report-kicker">Budget vs depenses</span>
+            <h2>Categorie par categorie</h2>
+          </div>
+          <a routerLink="/budgets" class="inline-link">Gerer les budgets</a>
+        </div>
+
+        @if (categories().length === 0) {
+          <div class="empty-inline">
+            <p>Aucune categorie depensee ou budgetee pour ce mois.</p>
+          </div>
+        } @else {
+          <div class="category-list">
+            @for (category of categories(); track category.category) {
+              <article class="category-item">
+                <div class="category-head">
+                  <div class="category-title">
+                    <span class="material-symbols-rounded">{{ category.icon }}</span>
+                    <div>
+                      <strong>{{ category.categoryLabel }}</strong>
+                      <span class="status-chip" [class]="'tone-' + statusTone(category.status)">
+                        {{ statusLabel(category.status) }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="category-values">
+                    <strong>{{ formatMoney(category.spent) }}</strong>
+                    <span>Budget: {{ formatMoney(category.budget) }}</span>
+                  </div>
+                </div>
+
+                <div class="progress-shell">
+                  <div class="progress-track">
+                    <div class="progress-fill" [style.width.%]="progressWidth(category)"></div>
+                  </div>
+                  <span class="progress-label">
+                    {{ category.usagePercent !== null ? formatPercent(category.usagePercent) : 'Sans budget' }}
+                  </span>
+                </div>
+
+                <div class="category-meta">
+                  <span>
+                    Reste:
+                    {{ category.remainingAmount !== null ? formatMoney(category.remainingAmount) : 'Non defini' }}
+                  </span>
+                  <span>{{ category.advice }}</span>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </article>
+
+      <article class="report-card">
+        <div class="report-card-head">
+          <div>
+            <span class="report-kicker">Cash breakdown</span>
+            <h2>Lecture des depenses especes</h2>
+          </div>
+          <a routerLink="/transactions" class="inline-link">Ouvrir les transactions</a>
+        </div>
+
+        @if (!hasCashTransactions()) {
+          <div class="empty-inline">
+            <p>Aucune transaction espece detectee sur ce mois.</p>
+          </div>
+        } @else {
+          <div class="cash-summary-grid">
+            <div class="cash-stat">
+              <span>Transactions cash</span>
+              <strong>{{ cashBreakdown()?.transactionCount }}</strong>
+            </div>
+
+            <div class="cash-stat">
+              <span>Breakdowns complets</span>
+              <strong>{{ cashBreakdown()?.completedBreakdowns }}</strong>
+            </div>
+
+            <div class="cash-stat">
+              <span>Breakdowns en attente</span>
+              <strong>{{ cashBreakdown()?.pendingBreakdowns }}</strong>
+            </div>
+
+            <div class="cash-stat">
+              <span>Ticket moyen</span>
+              <strong>{{ formatMoney(cashBreakdown()?.averageTransactionAmount) }}</strong>
+            </div>
+          </div>
+
+          <div class="cash-category-list">
+            @for (category of cashBreakdown()?.categories ?? []; track category.category) {
+              <article class="cash-category-item">
+                <div>
+                  <strong>{{ category.categoryLabel }}</strong>
+                  <p>{{ category.transactionCount }} ligne(s) cash</p>
+                </div>
+                <div class="cash-category-values">
+                  <strong>{{ formatMoney(category.amount) }}</strong>
+                  <span>{{ formatPercent(category.share) }}</span>
+                </div>
+              </article>
+            }
+          </div>
+        }
+      </article>
+    </section>
+  }
+</div>

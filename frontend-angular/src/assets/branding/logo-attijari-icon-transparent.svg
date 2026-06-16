@@ -1,0 +1,34 @@
+<svg width="256" height="256" viewBox="0 0 360 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="warmStrokeTransparent" x1="74" y1="290" x2="286" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B92526"/>
+      <stop offset="0.42" stop-color="#D94A2F"/>
+      <stop offset="0.72" stop-color="#F28C28"/>
+      <stop offset="1" stop-color="#F6B23C"/>
+    </linearGradient>
+    <linearGradient id="needleWarmTransparent" x1="126" y1="276" x2="268" y2="108" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D12F2B"/>
+      <stop offset="0.55" stop-color="#EA6F2F"/>
+      <stop offset="1" stop-color="#F6B23C"/>
+    </linearGradient>
+  </defs>
+
+  <path
+    d="M180 46C151 77 129 99 111 121C87 151 74 182 74 214C74 259 101 296 145 320L169 294C132 272 110 245 110 212C110 189 120 167 139 143C151 128 167 111 188 90C208 111 225 128 236 143C255 167 265 188 265 212C265 245 243 272 206 294L230 320C274 296 301 259 301 214C301 182 288 151 264 121C246 99 224 77 196 46L188 37L180 46Z"
+    fill="url(#warmStrokeTransparent)"
+  />
+  <path
+    d="M180 93C158 118 142 136 131 152C117 172 110 190 110 210C110 237 124 260 148 278L168 247C156 236 150 224 150 209C150 199 154 188 162 176C168 168 177 158 188 146C198 158 207 168 214 176C222 188 226 199 226 209C226 224 220 236 208 247L228 278C252 260 266 237 266 210C266 190 259 172 245 152C234 136 218 118 196 93L188 84L180 93Z"
+    fill="#FDFDFE"
+  />
+  <path
+    d="M124 275L170 171L280 84L215 220L124 275Z"
+    fill="url(#needleWarmTransparent)"
+  />
+  <path
+    d="M146 256L179 182L147 212L146 256Z"
+    fill="#BE242A"
+    fill-opacity="0.72"
+  />
+  <circle cx="180" cy="180" r="21" fill="#FFFFFF" stroke="#D94A2F" stroke-width="10"/>
+</svg>

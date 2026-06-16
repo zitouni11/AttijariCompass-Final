@@ -1,0 +1,141 @@
+<div class="cards-page-shell">
+  <section class="cards-hero-shell">
+    <div class="cards-hero-copy">
+      <span class="cards-kicker">Mes Cartes</span>
+      <h1>Associez vos cartes personnelles dans une experience bancaire premium, claire et immediate.</h1>
+      <p>Renseignez les informations exactes de votre carte, laissez le backend verifier la correspondance et retrouvez ensuite le detail ainsi que les transactions associees.</p>
+    </div>
+
+    <div class="cards-hero-actions">
+      <button type="button" class="cards-primary-btn" (click)="openAddDialog()">
+        <span class="material-symbols-rounded">add_card</span>
+        <span>Associer ma carte</span>
+      </button>
+      <button type="button" class="cards-secondary-btn" (click)="loadPage()">
+        <span class="material-symbols-rounded">refresh</span>
+        <span>Rafraichir</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="cards-stats-grid">
+    <article class="cards-stat-card cards-stat-card-strong">
+      <span>Cartes liees</span>
+      <strong>{{ connectedCount() }}</strong>
+      <small>Vision d ensemble de vos cartes associees.</small>
+    </article>
+
+    <article class="cards-stat-card">
+      <span>Cartes actives</span>
+      <strong>{{ activeCount() }}</strong>
+      <small>Cartes actuellement operationnelles.</small>
+    </article>
+
+    <article class="cards-stat-card">
+      <span>Catalogue</span>
+      <strong>{{ catalogCount() }}</strong>
+      <small>Types de cartes disponibles a la liaison.</small>
+    </article>
+
+    <article class="cards-stat-card">
+      <span>Lecture principale</span>
+      <strong>{{ premiumCardName() }}</strong>
+      <small>Premiere carte disponible dans la vue courante.</small>
+    </article>
+  </section>
+
+  @if (catalogWarning()) {
+    <div class="cards-feedback cards-feedback-warning">
+      <span class="material-symbols-rounded">warning</span>
+      <div>
+        <strong>Catalogue temporairement indisponible</strong>
+        <p>{{ catalogWarning() }}</p>
+      </div>
+    </div>
+  }
+
+  @if (pageError()) {
+    <div class="cards-feedback cards-feedback-danger">
+      <span class="material-symbols-rounded">error</span>
+      <div>
+        <strong>Chargement interrompu</strong>
+        <p>{{ pageError() }}</p>
+      </div>
+      <button type="button" class="cards-secondary-btn" (click)="loadPage()">Reessayer</button>
+    </div>
+  } @else if (loading()) {
+    <section class="cards-grid">
+      @for (item of skeletonCards; track $index) {
+        <div class="cards-skeleton-card"></div>
+      }
+    </section>
+  } @else if (!cards().length) {
+    <section class="cards-empty-state">
+      <div class="cards-empty-visual">
+        <span class="material-symbols-rounded">credit_card_off</span>
+      </div>
+      <div>
+        <h2>Aucune carte liee pour le moment</h2>
+        <p>Associez votre premiere carte pour acceder a son detail bancaire et aux transactions qui lui sont rattachees.</p>
+      </div>
+      <button type="button" class="cards-primary-btn" (click)="openAddDialog()">
+        <span class="material-symbols-rounded">add_card</span>
+        <span>Associer ma carte</span>
+      </button>
+    </section>
+  } @else {
+    <section class="cards-surface-shell">
+      <div class="cards-section-head">
+        <div>
+          <span class="cards-kicker">Portefeuille</span>
+          <h2>Cartes liees</h2>
+          <p>Chaque carte expose son code, son statut, son numero masque et sa date d expiration. Ouvrez une carte pour consulter son detail complet.</p>
+        </div>
+
+        <span class="cards-count-pill">{{ cards().length }} carte(s) liee(s)</span>
+      </div>
+
+      <div class="cards-grid">
+        @for (card of cards(); track card.id) {
+          <app-card-list-item
+            [card]="card"
+            [deleting]="deletingCardId() === card.id"
+            (opened)="openCard(card)"
+            (disconnectRequested)="requestDelete(card)"
+          />
+        }
+      </div>
+    </section>
+  }
+
+  <app-add-card-dialog
+    [open]="dialogOpen()"
+    [catalog]="catalog()"
+    [submitting]="submitting()"
+    [errorMessage]="submitError()"
+    (closed)="closeAddDialog()"
+    (submitted)="submitCard($event)"
+  />
+
+  @if (pendingDeleteCard(); as card) {
+    <div class="cards-dialog-backdrop" (click)="closeDeleteDialog()">
+      <section class="cards-delete-dialog" (click)="$event.stopPropagation()">
+        <span class="cards-kicker">Dissociation</span>
+        <h3>Dissocier {{ resolveCardDisplayName(card) }}</h3>
+        <p>La carte sera retiree de votre espace client. Cette action n efface pas l historique backend mais retire son acces depuis l interface.</p>
+
+        <div class="cards-delete-actions">
+          <button type="button" class="cards-secondary-btn" (click)="closeDeleteDialog()" [disabled]="deletingCardId() === card.id">
+            Annuler
+          </button>
+          <button type="button" class="cards-danger-btn" (click)="confirmDelete()" [disabled]="deletingCardId() === card.id">
+            @if (deletingCardId() === card.id) {
+              <span class="cards-spinner cards-spinner-small"></span>
+            }
+            <span>{{ deletingCardId() === card.id ? 'Dissociation...' : 'Confirmer' }}</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</div>

@@ -1,0 +1,163 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 115;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(17, 17, 17, 0.56);
+  backdrop-filter: blur(10px);
+}
+
+.modal-card {
+  width: min(100%, 760px);
+  padding: 1.4rem;
+  border-radius: 28px;
+  background: linear-gradient(180deg, #ffffff 0%, #fcf8f4 100%);
+  border: 1px solid rgba(245, 130, 32, 0.16);
+  box-shadow: 0 26px 64px rgba(17, 17, 17, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.38rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(245, 130, 32, 0.12);
+  color: #e56f0f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h2 {
+  margin: 0.75rem 0 0.25rem;
+  color: var(--attijari-black);
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.modal-header p {
+  margin: 0;
+  color: var(--attijari-muted);
+  line-height: 1.6;
+}
+
+.close-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--attijari-border);
+  border-radius: 14px;
+  background: var(--attijari-white);
+  color: var(--attijari-black);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.option-card {
+  width: 100%;
+  padding: 1.15rem;
+  border-radius: 24px;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(17, 17, 17, 0.02);
+  display: grid;
+  gap: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.option-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(245, 130, 32, 0.22);
+  box-shadow: 0 18px 34px rgba(17, 17, 17, 0.1);
+}
+
+.option-card-primary {
+  background:
+    radial-gradient(circle at top right, rgba(245, 130, 32, 0.18), transparent 40%),
+    linear-gradient(135deg, var(--attijari-black) 0%, #2a231e 100%);
+  border-color: rgba(245, 130, 32, 0.18);
+}
+
+.option-icon {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: var(--attijari-orange-soft);
+  color: var(--attijari-orange-dark);
+}
+
+.option-card-primary .option-icon {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--attijari-white);
+}
+
+.option-copy {
+  display: grid;
+  gap: 0.34rem;
+}
+
+.option-copy strong,
+.option-cta,
+.option-meta {
+  color: var(--attijari-black);
+}
+
+.option-card-primary .option-copy strong,
+.option-card-primary .option-copy p,
+.option-card-primary .option-cta {
+  color: var(--attijari-white);
+}
+
+.option-copy p {
+  color: var(--attijari-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.option-cta,
+.option-meta {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.option-meta {
+  color: var(--attijari-orange-dark);
+}
+
+@media (max-width: 720px) {
+  .modal-card {
+    padding: 1.1rem;
+    border-radius: 24px;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+}

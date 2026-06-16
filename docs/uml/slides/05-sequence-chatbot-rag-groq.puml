@@ -1,0 +1,19 @@
+@startuml
+title Chatbot RAG + Groq - Vue simplifiee
+
+skinparam shadowing false
+actor "Utilisateur" as User
+participant "Angular" as Front
+participant "API Spring Boot" as API
+database "PostgreSQL" as DB
+participant "Groq API" as Groq
+
+User -> Front : Question
+Front -> API : POST /api/chat
+API -> DB : Construire contexte RAG
+DB --> API : Donnees financieres
+API -> Groq : Prompt + contexte
+Groq --> API : Reponse IA
+API --> Front : Reponse
+Front --> User : Affichage
+@enduml

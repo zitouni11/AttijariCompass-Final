@@ -1,0 +1,113 @@
+<div class="modal-overlay" (click)="closeFromBackdrop($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="recommendation-budget-title">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">Action budgetaire</span>
+        <h2 id="recommendation-budget-title">{{ data.title }}</h2>
+        <p>{{ data.subtitle }}</p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close()" [disabled]="submitting()" aria-label="Fermer">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </header>
+
+    <div class="meta-row">
+      <span class="meta-pill">{{ data.sourceLabel }}</span>
+      <span class="meta-pill priority-pill" [ngClass]="data.priorityToneClass">{{ data.priorityLabel }}</span>
+      <span class="meta-pill">{{ data.confidenceLabel }}</span>
+      <span class="meta-pill">Effort {{ data.effortLabel }}</span>
+    </div>
+
+    @if (errorMessage(); as errorMessageText) {
+      <div class="feedback-banner">
+        <span class="material-symbols-rounded">error</span>
+        <span>{{ errorMessageText }}</span>
+      </div>
+    }
+
+    <div class="modal-grid">
+      <div class="modal-column">
+        <article class="summary-card summary-card-emphasis">
+          <span class="card-label">Cadre mensuel suggere</span>
+          <strong>{{ selectedFrame?.budgetLabel || data.suggestedBudgetLabel }}</strong>
+          <p>{{ selectedFrame?.guidanceLabel || 'Cadence a ajuster selon votre budget reel.' }}</p>
+        </article>
+
+        <article class="summary-card">
+          <div class="detail-row">
+            <span>Categorie ciblee</span>
+            <strong>{{ data.category }}</strong>
+          </div>
+
+          <div class="detail-row">
+            <span>Potentiel estime</span>
+            <strong>{{ data.impactMonthlyLabel }}</strong>
+          </div>
+
+          <div class="detail-row">
+            <span>Impact sur objectif</span>
+            <strong>{{ data.impactGoalLabel }}</strong>
+          </div>
+
+          <div class="detail-row">
+            <span>Impact principal</span>
+            <strong>{{ data.mainImpactLabel }}</strong>
+          </div>
+        </article>
+
+        <article class="summary-card">
+          <span class="card-label">Recommandation IA</span>
+          <p class="action-copy">{{ data.suggestedAction }}</p>
+        </article>
+      </div>
+
+      <section class="frames-panel">
+        <div class="frames-head">
+          <span class="card-label">Simulation frontend</span>
+          <h3>Choisir un cadre cible</h3>
+          <p>Chaque niveau affine le rythme de cadrage sans engager encore de sauvegarde metier.</p>
+        </div>
+
+        <div class="frames-list">
+          @for (frame of data.frames; track frame.key) {
+            <button
+              type="button"
+              class="frame-option"
+              [class.is-active]="isSelectedFrame(frame.key)"
+              [disabled]="submitting()"
+              (click)="selectFrame(frame.key)"
+            >
+              <div class="frame-head">
+                <div>
+                  <strong>{{ frame.label }}</strong>
+                  <span>{{ frame.badge }}</span>
+                </div>
+
+                @if (frame.recommended) {
+                  <span class="frame-badge">IA</span>
+                }
+              </div>
+
+              <strong class="frame-amount">{{ frame.budgetLabel }}</strong>
+              <span class="frame-guidance">{{ frame.guidanceLabel }}</span>
+              <p>{{ frame.description }}</p>
+            </button>
+          }
+        </div>
+      </section>
+    </div>
+
+    <footer class="modal-actions">
+      <button type="button" class="secondary-btn" (click)="close()" [disabled]="submitting()">
+        Fermer
+      </button>
+      <button type="button" class="primary-btn" (click)="apply()" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="btn-spinner"></span>
+        }
+        <span>{{ submitting() ? 'Enregistrement...' : 'Appliquer ce cadre' }}</span>
+      </button>
+    </footer>
+  </section>
+</div>

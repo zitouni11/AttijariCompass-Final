@@ -1,0 +1,127 @@
+<div class="chat-container">
+  <!-- Section Agent Animé -->
+  <div class="agent-section">
+    <div class="agent-card">
+      <!-- Avatar (Image réelle du conseiller) -->
+      <div class="avatar-container">
+        <img 
+          [src]="avatarEyesOpen() ? 'assets/agent-eyes-open.jpg' : 'assets/agent-eyes-closed.jpg'"
+          alt="Conseiller Bancaire"
+          class="avatar-image"
+          [class.speaking]="isAvatarSpeaking()"
+          loading="lazy">
+        
+        <!-- Indicateur de parole -->
+        <div *ngIf="isAvatarSpeaking()" class="speaking-indicator">
+          <span class="pulse"></span>
+          <span class="pulse"></span>
+          <span class="pulse"></span>
+        </div>
+      </div>
+
+      <!-- Nom et statut -->
+      <div class="agent-info">
+        <h2 class="agent-name">Conseiller Bancaire IA</h2>
+        <p class="agent-status" [class.active]="!isLoading()">
+          <span class="status-dot" [class.active]="!isLoading()"></span>
+          {{ isLoading() ? '⏳ Traitement...' : (isAvatarSpeaking() ? '🎤 Parle' : '✓ Prêt') }}
+        </p>
+      </div>
+
+      <!-- Bouton mute -->
+      <button 
+        class="btn-mute"
+        (click)="isMuted.set(!isMuted())"
+        [title]="isMuted() ? 'Activer le son' : 'Désactiver le son'">
+        {{ isMuted() ? '🔇' : '🔊' }}
+      </button>
+    </div>
+
+    <!-- Graphique (optionnel) -->
+    <div *ngIf="showChart() && chartData() as chart" class="chart-section">
+      <h3 class="chart-title">{{ chart.title }}</h3>
+      <div class="chart-bars">
+        @for (item of chart.labels; track item; let i = $index) {
+          <div class="chart-item">
+            <div class="bar-container">
+              <div 
+                class="bar" 
+                [style.width.%]="getBarWidth(chart.values[i], 950)">
+                <span class="bar-value">{{ chart.values[i] }} DT</span>
+              </div>
+            </div>
+            <label class="bar-label">{{ item }}</label>
+          </div>
+        }
+      </div>
+      <div class="chart-total">
+        Total: <strong>{{ getTotalChartValue() }} DT</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Chat -->
+  <div class="chat-section">
+    <!-- Messages -->
+    <div class="chat-messages">
+      @for (msg of messages(); track msg.id) {
+        <div [class]="'message message-' + msg.sender">
+          <div class="message-content">
+            <p class="message-text">{{ msg.text }}</p>
+            <span class="message-time">{{ msg.timestamp | date:'HH:mm' }}</span>
+          </div>
+        </div>
+      }
+
+      <!-- Indicateur de chargement -->
+      @if (isLoading()) {
+        <div class="message message-agent">
+          <div class="message-content">
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Actions suggérées -->
+    <div class="suggested-actions">
+      <p class="suggestions-title">Actions rapides:</p>
+      <div class="action-buttons">
+        @for (action of suggestedActions; track action.value) {
+          <button 
+            class="action-btn"
+            (click)="sendAction(action.value)"
+            [disabled]="isLoading()">
+            {{ action.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Input Zone -->
+    <div class="input-section">
+      <div class="input-wrapper">
+        <input 
+          type="text"
+          [(ngModel)]="userInput"
+          (keyup.enter)="sendMessage()"
+          placeholder="Décrivez votre situation financière ou vos objectifs..."
+          class="chat-input"
+          [disabled]="isLoading()">
+        
+        <button 
+          class="send-btn"
+          (click)="sendMessage()"
+          [disabled]="!userInput() || isLoading()"
+          title="Envoyer">
+          {{ isLoading() ? '⏳' : '➤' }}
+        </button>
+      </div>
+      <p class="input-hint">💡 Tapez votre question ou cliquez sur une action suggérée</p>
+    </div>
+  </div>
+</div>

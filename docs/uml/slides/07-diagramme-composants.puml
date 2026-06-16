@@ -1,0 +1,21 @@
+@startuml
+title Attijari Compass - Composants principaux
+
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+component "Frontend Angular" as Front
+component "API Spring Boot" as API
+component "Securite JWT" as Sec
+component "Services metier" as Biz
+component "FastAPI ML" as ML
+component "Groq API" as Groq
+database "PostgreSQL" as DB
+
+Front --> API : REST + JWT
+API --> Sec
+API --> Biz
+Biz --> DB
+Biz --> ML : prediction categorie
+Biz --> Groq : chatbot RAG
+@enduml

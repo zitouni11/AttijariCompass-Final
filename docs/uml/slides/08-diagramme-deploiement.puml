@@ -1,0 +1,18 @@
+@startuml
+title Attijari Compass - Deploiement simplifie
+
+skinparam shadowing false
+
+node "Client" as Client
+node "Frontend Angular" as Front
+node "Backend Spring Boot" as Back
+node "FastAPI ML" as ML
+database "PostgreSQL" as DB
+cloud "Groq API" as Groq
+
+Client --> Front : Navigateur
+Front --> Back : REST + JWT
+Back --> DB : JPA/JDBC
+Back --> ML : Prediction ML
+Back --> Groq : Chatbot RAG
+@enduml

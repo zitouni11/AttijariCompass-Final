@@ -1,0 +1,40 @@
+@startuml
+title Attijari Compass - Diagramme de deploiement
+
+skinparam shadowing false
+skinparam nodeStyle rectangle
+
+node "Poste utilisateur" {
+  artifact "Navigateur web" as Browser
+}
+
+node "Serveur frontend" {
+  artifact "Application Angular\nHTML, CSS, JS" as Angular
+}
+
+node "Serveur backend" {
+  artifact "Spring Boot API\nattijari-compass.jar" as Spring
+}
+
+node "Serveur ML" {
+  artifact "FastAPI ML" as FastAPI
+  artifact "Modele joblib\ntransaction_category_model" as Model
+}
+
+node "Base de donnees" {
+  database "PostgreSQL\ncompassbd" as DB
+}
+
+cloud "Service externe Groq" as Groq
+node "Service local optionnel" {
+  artifact "Ollama / mistral" as Ollama
+}
+
+Browser --> Angular : chargement SPA
+Angular --> Spring : HTTP REST\nJWT Bearer
+Spring --> DB : JDBC / JPA
+Spring --> FastAPI : HTTP /predict
+FastAPI --> Model : chargement modele
+Spring --> Groq : HTTPS chat completions
+Spring --> Ollama : HTTP local optionnel
+@enduml

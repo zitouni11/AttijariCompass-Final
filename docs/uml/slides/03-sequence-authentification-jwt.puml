@@ -1,0 +1,17 @@
+@startuml
+title Authentification JWT - Vue simplifiee
+
+skinparam shadowing false
+actor "Utilisateur" as User
+participant "Angular" as Front
+participant "API Spring Boot" as API
+database "PostgreSQL" as DB
+
+User -> Front : Email + mot de passe
+Front -> API : POST /api/auth/login
+API -> DB : Verifier utilisateur
+DB --> API : Utilisateur valide
+API -> API : Creer JWT + refresh token
+API --> Front : AuthResponse
+Front --> User : Acces au dashboard
+@enduml

@@ -1,0 +1,19 @@
+@startuml
+title Synchronisation carte bancaire - Vue simplifiee
+
+skinparam shadowing false
+actor "Utilisateur" as User
+participant "Angular" as Front
+participant "API Spring Boot" as API
+database "PostgreSQL" as DB
+
+User -> Front : Synchroniser carte
+Front -> API : POST /api/cards/{id}/sync
+API -> DB : Verifier carte
+DB --> API : Carte utilisateur
+API -> DB : Lire operations source
+DB --> API : Operations carte
+API -> DB : Sauvegarder transactions
+API --> Front : Resume synchronisation
+Front --> User : Vue mise a jour
+@enduml

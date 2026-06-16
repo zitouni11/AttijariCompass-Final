@@ -1,0 +1,34 @@
+@startuml
+title Attijari Compass - Sequence d'authentification JWT
+
+skinparam shadowing false
+autonumber
+
+actor "Utilisateur" as User
+participant "Angular\nLoginComponent" as Front
+participant "AuthService\nAngular" as AuthNg
+participant "AuthController" as AuthCtrl
+participant "AuthService\nSpring" as AuthSvc
+participant "UserRepository" as UserRepo
+participant "PasswordEncoder" as Encoder
+participant "JwtService" as Jwt
+database "PostgreSQL" as DB
+
+User -> Front : Saisir identifiants
+Front -> AuthNg : login(email, password)
+AuthNg -> AuthCtrl : POST /api/auth/login
+AuthCtrl -> AuthSvc : login(request)
+AuthSvc -> UserRepo : findByEmail(email)
+UserRepo -> DB : SELECT app_user
+DB --> UserRepo : utilisateur
+UserRepo --> AuthSvc : User
+AuthSvc -> Encoder : matches(password, hash)
+Encoder --> AuthSvc : mot de passe valide
+AuthSvc -> Jwt : generateToken(user)
+Jwt --> AuthSvc : accessToken
+AuthSvc -> AuthSvc : generer refreshToken
+AuthSvc --> AuthCtrl : AuthResponse
+AuthCtrl --> AuthNg : 200 OK
+AuthNg -> Front : stocker tokens
+Front --> User : redirection dashboard
+@enduml

@@ -1,0 +1,203 @@
+<section class="cards-page">
+  <header class="page-header">
+    <div class="header-copy">
+      <span class="eyebrow">Cartes bancaires sandbox</span>
+      <h1>Mes cartes</h1>
+      <p>
+        Retrouvez d’abord vos cartes connectées, puis consultez en un clic leurs détails et leurs transactions.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-primary" type="button" (click)="openAddCardOptions()">
+        <span class="material-symbols-rounded">add_card</span>
+        <span>Ajouter une carte</span>
+      </button>
+    </div>
+  </header>
+
+  @if (activityBanner(); as banner) {
+    <article class="activity-banner" [class.info]="banner.tone === 'info'">
+      <span class="material-symbols-rounded">
+        {{ banner.tone === 'success' ? 'check_circle' : 'sync' }}
+      </span>
+
+      <div>
+        <strong>{{ banner.title }}</strong>
+        <p>{{ banner.description }}</p>
+      </div>
+    </article>
+  }
+
+  @if (pageError(); as errorMessage) {
+    <article class="state-banner state-banner-error">
+      <div>
+        <strong>Connexion au service cartes impossible</strong>
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <button class="btn btn-secondary" type="button" (click)="loadCards()">
+        Réessayer
+      </button>
+    </article>
+  }
+
+  @if (loading()) {
+    <section class="loading-shell">
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card"></div>
+      <div class="skeleton-card large"></div>
+    </section>
+  } @else if (!cards().length) {
+    <section class="empty-shell">
+      <div class="empty-visual">
+        <span class="material-symbols-rounded">credit_card_off</span>
+      </div>
+      <span class="eyebrow">Aucune carte connectée</span>
+      <h2>Ajoutez votre première carte test</h2>
+      <p>
+        Connectez une carte sandbox pour importer ses transactions, la synchroniser à la demande
+        et suivre son historique dans Attijari Compass.
+      </p>
+      <button class="btn btn-primary" type="button" (click)="openAddCardOptions()">
+        Ajouter une carte
+      </button>
+    </section>
+  } @else {
+    <section class="cards-overview panel-surface">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">Cartes connectées</span>
+          <h2>Cartes connectées</h2>
+          <p>Chaque carte ouvre sa propre page détaillée avec ses informations, ses transactions et ses analyses.</p>
+        </div>
+
+        <div class="section-heading-actions">
+          <span class="section-count">{{ cards().length }} carte(s)</span>
+
+          <button class="btn btn-secondary btn-compact" type="button" (click)="loadCards()">
+            <span class="material-symbols-rounded">refresh</span>
+            <span>Actualiser</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="cards-gallery">
+        @for (card of cards(); track card.id) {
+          <article
+            class="linked-bank-card bank-card"
+            (click)="openCardDetails(card)"
+          >
+            <div class="linked-card-top bank-card-top">
+              <span class="card-chip">{{ getDisplayCardCode(card) }}</span>
+              <span class="status-chip" [ngClass]="getStatusTone(card)">
+                {{ getStatusLabel(card) }}
+              </span>
+            </div>
+
+            <div class="linked-card-body">
+              <figure class="linked-card-image-frame">
+                <img
+                  class="linked-card-real-image"
+                  [src]="getCardImage(card)"
+                  [alt]="getCardDisplayName(card)"
+                  loading="lazy"
+                />
+              </figure>
+
+              <div class="linked-card-info">
+                <div class="bank-card-copy">
+                  <strong class="card-title">{{ getCardDisplayName(card) }}</strong>
+                  <span class="card-holder">{{ card.holderName || 'Titulaire non renseigné' }}</span>
+                  <span class="card-number">{{ getMaskedCardNumber(card) }}</span>
+                </div>
+
+                <div class="card-inline-meta">
+                  <span>Last 4 : {{ getMaskedCardNumber(card).slice(-4) }}</span>
+                  <span>Expiration : {{ getCardExpiryLabel(card) }}</span>
+                  <span>Liée le {{ formatDate(card.connectedAt) }}</span>
+                </div>
+
+                <div class="bank-card-actions">
+                  <button
+                    class="btn btn-secondary btn-compact"
+                    type="button"
+                    (click)="$event.stopPropagation(); requestDisconnectCard(card)"
+                    [disabled]="isDisconnecting(card.id)"
+                  >
+                    @if (isDisconnecting(card.id)) {
+                      <span class="spinner small"></span>
+                    }
+                    <span>Dissocier</span>
+                  </button>
+
+                  <button
+                    class="btn btn-primary btn-compact"
+                    type="button"
+                    (click)="$event.stopPropagation(); openCardDetails(card)"
+                  >
+                    Voir le détail
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        }
+      </div>
+    </section>
+  }
+
+  @if (addModalOpen()) {
+    <app-add-test-card
+      [loading]="generating()"
+      [generatedResult]="generatedCardResult()"
+      [connectingToAccount]="connectingGeneratedCard()"
+      [connectError]="generatedCardConnectError()"
+      (closed)="closeAddCardModal()"
+      (submitted)="generateTestCard($event)"
+      (resetRequested)="resetGeneratedCardResult()"
+      (connectRequested)="connectGeneratedCardToAccount($event)"
+    />
+  }
+
+  @if (addCardOptionsOpen()) {
+    <app-card-entry-options-modal
+      [pendingCount]="pendingSandboxCardsCount()"
+      (closed)="closeAddCardOptions()"
+      (generateSelected)="openGenerateCardFlow()"
+      (existingSelected)="openConnectExistingCardFlow()"
+    />
+  }
+
+  @if (connectExistingModalOpen()) {
+    <app-connect-existing-card-modal
+      [cards]="pendingSandboxCards()"
+      [loading]="connectingExistingCard()"
+      [error]="connectExistingCardError()"
+      (closed)="closeConnectExistingCardModal()"
+      (connectRequested)="connectExistingSandboxCard($event)"
+    />
+  }
+
+  @if (pendingDisconnectCard(); as card) {
+    <div class="modal-backdrop" (click)="closeDisconnectModal()">
+      <section class="disconnect-dialog" (click)="$event.stopPropagation()">
+        <span class="eyebrow">Dissociation</span>
+        <h3>Dissocier {{ getCardDisplayName(card) }}</h3>
+        <p>Cette carte sera retirée de votre espace Mes cartes. Vous pourrez l’associer à nouveau plus tard si besoin.</p>
+
+        <div class="disconnect-actions">
+          <button class="btn btn-secondary" type="button" (click)="closeDisconnectModal()" [disabled]="isDisconnecting(card.id)">
+            Annuler
+          </button>
+          <button class="btn btn-danger" type="button" (click)="confirmDisconnectCard()" [disabled]="isDisconnecting(card.id)">
+            @if (isDisconnecting(card.id)) {
+              <span class="spinner small"></span>
+            }
+            <span>Confirmer la dissociation</span>
+          </button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

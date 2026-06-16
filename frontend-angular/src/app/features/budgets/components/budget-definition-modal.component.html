@@ -1,0 +1,198 @@
+<div
+  class="budget-studio-overlay"
+  [class.budget-studio-embedded]="embedded"
+  (click)="closeFromBackdrop($event)"
+>
+  <section
+    class="budget-studio-card"
+    [class.budget-studio-card-embedded]="embedded"
+    [attr.role]="embedded ? null : 'dialog'"
+    [attr.aria-modal]="embedded ? null : true"
+    [attr.aria-labelledby]="embedded ? null : 'budget-studio-title'"
+  >
+    @if (!embedded) {
+      <header class="budget-studio-header">
+        <div class="budget-studio-header-copy">
+          <span class="budget-studio-kicker">Definir un budget</span>
+          <h2 id="budget-studio-title">Studio budgets</h2>
+          <p>Definissez vos cadres budgetaires mensuels par categorie.</p>
+        </div>
+
+        <button type="button" class="budget-studio-close" (click)="close()" [disabled]="submitting()" aria-label="Fermer">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </header>
+
+      <div class="budget-studio-mode-switch" role="tablist" aria-label="Modes de definition budgetaire">
+        <button
+          type="button"
+          class="budget-studio-mode-btn"
+          [class.active]="isModeSelected('manual')"
+          [attr.aria-selected]="isModeSelected('manual')"
+          (click)="setMode('manual')"
+        >
+          <span class="material-symbols-rounded">grid_view</span>
+          <span>Mode manuel complet</span>
+        </button>
+      </div>
+
+      <div class="budget-studio-summary-grid">
+        <article class="budget-studio-summary-card budget-studio-summary-card-dark">
+          <span>Budgets actifs</span>
+          <strong>{{ activeBudgetCount() }}</strong>
+          <small>Categories deja pre-remplies depuis le backend.</small>
+        </article>
+
+        <article class="budget-studio-summary-card">
+          <span>Categories renseignees</span>
+          <strong>{{ filledManualCategoryCount() }}</strong>
+          <small>Montants actuellement saisis dans la vue complete.</small>
+        </article>
+
+        <article class="budget-studio-summary-card">
+          <span>Changements detectes</span>
+          <strong>{{ changedManualCategoryCount() }}</strong>
+          <small>Operations qui seront jouees une par une lors de l enregistrement.</small>
+        </article>
+
+        <article class="budget-studio-summary-card">
+          <span>Projection totale</span>
+          <strong>{{ manualTotalLabel() }}</strong>
+          <small>Total de la definition manuelle en cours.</small>
+        </article>
+      </div>
+    }
+
+    @if (summaryMessage()) {
+      <div class="budget-studio-feedback budget-studio-feedback-info">
+        <span class="material-symbols-rounded">info</span>
+        <p>{{ summaryMessage() }}</p>
+      </div>
+    }
+
+    @if (errorMessages().length) {
+      <div class="budget-studio-feedback budget-studio-feedback-danger">
+        <span class="material-symbols-rounded">error</span>
+        <div>
+          <strong>Quelques categories n ont pas pu etre traitees</strong>
+          <ul class="budget-studio-error-list">
+            @for (message of errorMessages(); track message) {
+              <li>{{ message }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
+    @if (progressLabel()) {
+      <div class="budget-studio-progress">
+        <span class="budget-studio-spinner"></span>
+        <span>{{ progressLabel() }}</span>
+      </div>
+    }
+
+    <section class="budget-studio-manual">
+      <div class="budget-studio-panel-head">
+        <div>
+          <span class="budget-studio-kicker">Mode complet</span>
+          <h3>Toutes les categories disponibles</h3>
+          <p>Chaque ligne permet de definir un montant et un niveau. Les categories deja actives sont pre-remplies.</p>
+        </div>
+      </div>
+
+      <div class="budget-category-grid">
+        @for (row of manualRows(); track row.category) {
+          <button
+            type="button"
+            class="budget-category-tile"
+            [class.active]="isBudgetCategorySelected(row)"
+            [disabled]="submitting()"
+            (click)="selectBudgetCategory(row)"
+          >
+            <span class="category-icon material-symbols-rounded">{{ row.categoryIcon }}</span>
+            <span class="category-name">{{ row.categoryLabel }}</span>
+            @if (row.existingBudget?.status === 'ACTIVE') {
+              <span class="category-status">Actif</span>
+            }
+          </button>
+        }
+      </div>
+
+      @if (selectedBudgetRow(); as row) {
+        <div class="selected-budget-panel">
+          <div class="budget-studio-row-head">
+            <div class="budget-studio-row-identity">
+              <span class="budget-studio-row-icon material-symbols-rounded">{{ row.categoryIcon }}</span>
+              <div>
+                <div class="budget-studio-row-title">
+                  <strong>{{ row.categoryLabel }}</strong>
+                </div>
+                <small>{{ rowCurrentSourceLabel(row) }}</small>
+              </div>
+            </div>
+
+            <span class="budget-studio-chip" [class]="rowStateClass(row)">{{ rowStateLabel(row) }}</span>
+          </div>
+
+          <div class="budget-studio-row-current">
+            <span>Budget actif actuel</span>
+            <strong>{{ rowCurrentAmountLabel(row) }}</strong>
+          </div>
+
+          <div class="budget-studio-form-grid">
+            <label class="budget-studio-field">
+              <span>Montant mensuel</span>
+              <input
+                type="number"
+                min="0"
+                step="10"
+                inputmode="numeric"
+                [value]="row.amountInput"
+                [disabled]="submitting()"
+                placeholder="Ex. 300"
+                (input)="updateAmount(row.category, $any($event.target).value)"
+              />
+            </label>
+
+            <label class="budget-studio-field">
+              <span>Niveau</span>
+              <select
+                [value]="row.selectedLevel"
+                [disabled]="submitting()"
+                (change)="updateLevel(row.category, $any($event.target).value)"
+              >
+                <option value="PRUDENT">Prudent</option>
+                <option value="EQUILIBRE">Equilibre</option>
+                <option value="RENFORCE">Renforce</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="budget-studio-row-actions">
+            <button type="button" class="budget-studio-secondary-btn" [disabled]="submitting()" (click)="restoreRow(row.category)">
+              Restaurer
+            </button>
+            <button type="button" class="budget-studio-ghost-btn" [disabled]="submitting()" (click)="clearRow(row.category)">
+              Vider
+            </button>
+          </div>
+        </div>
+      }
+    </section>
+
+    <footer class="budget-studio-footer">
+      @if (!embedded) {
+        <button type="button" class="budget-studio-secondary-btn" [disabled]="submitting()" (click)="close()">
+          Fermer
+        </button>
+      }
+
+      <button type="button" class="budget-studio-primary-btn" [disabled]="submitting()" (click)="saveManualDefinition()">
+        @if (submitting()) {
+          <span class="budget-studio-spinner"></span>
+        }
+        <span>{{ submitting() ? 'Enregistrement...' : 'Enregistrer les budgets' }}</span>
+      </button>
+    </footer>
+  </section>
+</div>

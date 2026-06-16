@@ -1,0 +1,12 @@
+date,description,amount,category,type,paymentMethod,merchantName
+27/03/2026,Dîner en famille,125.50,RESTAURATION,DEPENSE,CARD,Restaurant Le Bon Goût
+27/03/2026,Salaire mensuel,3000.00,SALAIRE,REVENU,BANK_TRANSFER,Employeur SA
+26/03/2026,Essence carburant,60.00,TRANSPORT,DEPENSE,CARD,Station Shell
+26/03/2026,Cinéma,15.00,LOISIRS,DEPENSE,CARD,Cinéma Palace
+25/03/2026,Médecin consultation,80.00,SANTÉ,DEPENSE,BANK_TRANSFER,Dr. Ahmed
+24/03/2026,Épicerie,50.00,,DEPENSE,CARD,Carrefour
+23/03/2026,Loyer appartement,800.00,LOGEMENT,DEPENSE,BANK_TRANSFER,Propriétaire
+22/03/2026,Abonnement internet,45.00,SERVICES,DEPENSE,BANK_TRANSFER,Orange
+20/03/2026,Cours langue,150.00,ÉDUCATION,DEPENSE,BANK_TRANSFER,Ecole de Langue
+19/03/2026,Tickets bus,30.00,TRANSPORT,DEPENSE,CASH,STTU
+

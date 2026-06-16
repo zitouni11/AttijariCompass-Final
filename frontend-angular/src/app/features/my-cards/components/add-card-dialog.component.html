@@ -1,0 +1,95 @@
+@if (open) {
+  <div class="cards-dialog-backdrop" (click)="close()">
+    <section class="cards-dialog-panel" (click)="$event.stopPropagation()">
+      <header class="cards-dialog-head">
+        <div>
+          <span class="cards-kicker">Associer ma carte</span>
+          <h2>Lier une carte existante</h2>
+          <p>Saisissez les informations exactes de votre carte. Le backend vérifie la correspondance dans la base cartes Attijari avant de lier la carte à votre espace.</p>
+        </div>
+
+        <button type="button" class="cards-icon-btn" (click)="close()" [disabled]="submitting" aria-label="Fermer">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </header>
+
+      @if (errorMessage) {
+        <div class="cards-feedback cards-feedback-danger">
+          <span class="material-symbols-rounded">error</span>
+          <div>
+            <strong>Association impossible</strong>
+            <p>{{ errorMessage }}</p>
+          </div>
+        </div>
+      }
+
+      <form [formGroup]="form" class="cards-form-grid" (ngSubmit)="submit()">
+        <label class="cards-field cards-field-wide" [class.cards-field-invalid]="hasError('cardCatalogId')">
+          <span>Type de carte</span>
+          <select class="cards-input" formControlName="cardCatalogId">
+            <option [ngValue]="null">Selectionnez une carte</option>
+            @for (item of catalog; track item.id) {
+              <option [ngValue]="item.id">{{ item.name }}{{ item.cardCode ? ' - ' + item.cardCode : '' }}</option>
+            }
+          </select>
+          <small class="cards-helper">
+            {{ selectedCatalog?.description || 'Choisissez le type de carte correspondant exactement a votre carte physique.' }}
+          </small>
+          @if (errorText('cardCatalogId'); as message) {
+            <small class="cards-field-error">{{ message }}</small>
+          }
+        </label>
+
+        <div class="cards-info-note cards-field-wide">
+          <span class="material-symbols-rounded">account_circle</span>
+          <p>Le nom du porteur sera automatiquement celui de votre compte connecté.</p>
+        </div>
+
+        <label class="cards-field cards-field-wide" [class.cards-field-invalid]="hasError('cardNumber')">
+          <span>Numéro de carte</span>
+          <input
+            class="cards-input"
+            type="text"
+            formControlName="cardNumber"
+            inputmode="numeric"
+            autocomplete="cc-number"
+            placeholder="1234 5678 9012 3456"
+            (input)="sanitizeCardNumber($event)"
+          />
+          <small class="cards-helper">16 chiffres, numériques uniquement. Le numéro sera masqué après liaison.</small>
+          @if (errorText('cardNumber'); as message) {
+            <small class="cards-field-error">{{ message }}</small>
+          }
+        </label>
+
+        <label class="cards-field" [class.cards-field-invalid]="hasError('expiryMonth')">
+          <span>Mois d’expiration</span>
+          <input class="cards-input" type="number" min="1" max="12" formControlName="expiryMonth" placeholder="MM" />
+          @if (errorText('expiryMonth'); as message) {
+            <small class="cards-field-error">{{ message }}</small>
+          }
+        </label>
+
+        <label class="cards-field" [class.cards-field-invalid]="hasError('expiryYear')">
+          <span>Année d’expiration</span>
+          <input class="cards-input" type="number" [min]="currentYear" [max]="currentYear + 20" formControlName="expiryYear" placeholder="YYYY" />
+          @if (errorText('expiryYear'); as message) {
+            <small class="cards-field-error">{{ message }}</small>
+          }
+        </label>
+      </form>
+
+      <footer class="cards-dialog-actions">
+        <button type="button" class="cards-secondary-btn" (click)="close()" [disabled]="submitting">
+          Annuler
+        </button>
+        <button type="button" class="cards-primary-btn" (click)="submit()" [disabled]="submitting || !catalog.length">
+          @if (submitting) {
+            <span class="cards-spinner"></span>
+          }
+          <span>{{ submitting ? 'Association en cours' : 'Associer ma carte' }}</span>
+        </button>
+      </footer>
+    </section>
+  </div>
+}

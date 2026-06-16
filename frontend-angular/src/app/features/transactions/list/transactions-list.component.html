@@ -1,0 +1,651 @@
+<div class="page">
+  @if (!isRecommendationAnalysisMode()) {
+    <section class="transactions-hero">
+      <div class="transactions-hero-copy transactions-ai-content">
+        <span class="transactions-hero-kicker">Transactions & IA</span>
+        <h1>Une salle de pilotage elegante pour vos flux, vos imports et votre categorisation automatique</h1>
+        <p>
+          Cette page centralise vos transactions, vos actions metier, vos imports Excel ou CSV
+          et la categorisation automatique dans une experience bancaire plus lisible et plus immediate.
+        </p>
+
+        <div class="transactions-hero-tags transactions-ai-chips">
+          <span class="transactions-hero-tag">Vue unifiee</span>
+          <span class="transactions-hero-tag">Import Excel / CSV</span>
+          <span class="transactions-hero-tag">Categorisation automatique</span>
+          <span class="transactions-hero-tag">Memoire utilisateur active</span>
+        </div>
+      </div>
+
+      <div class="transactions-hero-actions-card">
+        <span class="actions-label">Actions rapides</span>
+
+        <div class="transactions-hero-actions">
+          <button type="button" class="btn-light" (click)="loadTransactions(visiblePageIndex())" [disabled]="loading()">
+            Rafraichir
+          </button>
+          <a routerLink="/transactions/new" class="btn-light">Nouvelle transaction</a>
+          <button type="button" class="btn-primary" (click)="openImportModal()" [disabled]="importsDisabled()">Importer</button>
+          <button
+            type="button"
+            class="btn-danger"
+            (click)="openDeleteAllModal($event)"
+            [disabled]="loading() || !hasAnyTransactions() || isDeletingAll">
+            Supprimer tout
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="transactions-showcase-grid">
+      @for (card of showcaseCards(); track card.label) {
+        <article class="transactions-showcase-card" [attr.data-tone]="card.tone">
+          <div class="transactions-showcase-head">
+            <span class="material-symbols-rounded">{{ card.icon }}</span>
+            <span>{{ card.label }}</span>
+          </div>
+          <strong>{{ card.value }}</strong>
+          <p>{{ card.detail }}</p>
+        </article>
+      }
+    </section>
+
+    <div *ngIf="showImportModal" class="import-modal-backdrop" (click)="closeImportModal()">
+      <section
+        class="import-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-modal-title"
+        (click)="$event.stopPropagation()">
+        <div class="import-modal-header">
+          <div>
+            <span class="section-kicker transactions-ml-card-kicker">Import batch Excel / CSV</span>
+            <h2 id="import-modal-title">Importer et categoriser vos transactions</h2>
+            <p>Chargez un fichier Excel ou CSV. Les lignes seront analysees, categorisees automatiquement puis affichees directement dans votre espace transactions.</p>
+          </div>
+
+          <button type="button" class="import-modal-close" (click)="closeImportModal()" aria-label="Fermer l import">
+            &times;
+          </button>
+        </div>
+
+        <article #batchImportSection class="transactions-ml-card transactions-ml-card-batch import-modal-content">
+
+      @if (importsDisabled()) {
+        <div class="transactions-ml-feedback transactions-ml-feedback-error">
+          <strong>Import indisponible</strong>
+          <span>{{ importDisabledMessage() }}</span>
+        </div>
+      }
+
+      <label class="transactions-ml-upload-zone">
+        <input #batchMlInput type="file" accept=".xlsx,.xls,.csv" (change)="onBatchMlFileSelected($event)" [disabled]="importsDisabled()" />
+        <span class="material-symbols-rounded">upload_file</span>
+        <strong>{{ batchMlSelectedFile()?.name || 'Aucun fichier choisi' }}</strong>
+        <span>Choisir un fichier a analyser</span>
+        <small>
+          {{ batchMlSelectedFile() ? formatFileSize(batchMlSelectedFile()?.size || 0) : 'Formats acceptes: Excel et CSV' }} · Taille max {{ maxImportFileSizeMb() }} Mo
+        </small>
+      </label>
+
+        <div class="transactions-ml-actions">
+          <button type="button" class="btn-secondary" (click)="clearBatchMlFile()" [disabled]="batchMlUploading()">
+            Effacer
+          </button>
+        <button type="button" class="btn-primary" (click)="runBatchImport()" [disabled]="batchMlUploading() || importsDisabled()">
+            @if (batchMlUploading()) {
+              <span class="spinner"></span>
+              Traitement...
+            } @else {
+              Analyser et afficher
+            }
+          </button>
+        </div>
+
+        @if (batchMlError()) {
+          <div class="transactions-ml-feedback transactions-ml-feedback-error">
+            <strong>Erreur batch</strong>
+            <span>{{ batchMlError() }}</span>
+          </div>
+        }
+
+        @if (batchMlSuccess()) {
+          <div class="transactions-ml-feedback transactions-ml-feedback-success">
+            <strong>{{ batchMlSuccess() }}</strong>
+            <span>{{ batchMlImportedCount() }} ligne(s) importee(s), {{ batchMlErrorCount() }} erreur(s).</span>
+          </div>
+        }
+
+        @if (batchMlRowErrors().length) {
+          <div class="transactions-ml-feedback transactions-ml-feedback-error">
+            <strong>Erreurs detectees ligne par ligne</strong>
+            @for (rowError of batchMlRowErrors().slice(0, 12); track rowError.rowNumber + '-' + rowError.message) {
+              <span>Ligne {{ rowError.rowNumber }}: {{ rowError.message }}</span>
+            }
+          </div>
+        }
+
+        <div class="transactions-ml-batch-note">
+          Les transactions enrichies sont injectees directement dans le tableau ci-dessous, sans telechargement local.
+        </div>
+      </article>
+      </section>
+    </div>
+  }
+
+  @if (isRecommendationAnalysisMode()) {
+    <div class="transactions-analysis-stack">
+      <section class="transactions-analysis-hero">
+        <div class="transactions-analysis-head">
+          <div class="transactions-analysis-copy">
+            <div class="transactions-analysis-badges">
+              <span class="transactions-analysis-badge">Analyse IA</span>
+              <span class="transactions-analysis-badge transactions-analysis-badge-soft">Depuis recommandation</span>
+            </div>
+
+            <div class="transactions-analysis-title-block">
+              <span class="transactions-analysis-eyebrow">Lecture guidee des transactions</span>
+              <h2>{{ analysisContext().title }}</h2>
+              <p>{{ analysisContext().description }}</p>
+            </div>
+
+            <div class="transactions-analysis-chip-row">
+              @for (filter of analysisAppliedFiltersLabel().split(' / '); track filter) {
+                @if (filter) {
+                  <span class="transactions-analysis-chip">{{ filter }}</span>
+                }
+              }
+            </div>
+          </div>
+
+          <aside class="transactions-analysis-hero-aside">
+            <div class="transactions-analysis-hero-stat">
+              <span class="transactions-analysis-hero-stat-label">Transactions ciblees</span>
+              <strong>{{ filteredTotalCount() }}</strong>
+              <p>Vue filtree selon la recommandation active</p>
+            </div>
+
+            <div class="transactions-analysis-actions">
+              <button type="button" class="btn-secondary" (click)="returnToRecommendations()">
+                Retour aux recommandations
+              </button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      @if (analysisSummaryCards().length > 0) {
+        <section class="transactions-analysis-summary-block">
+          <div class="transactions-analysis-section-head">
+            <div>
+              <span class="transactions-analysis-section-kicker">Synthese rapide</span>
+              <h3>Les indicateurs a regarder en premier</h3>
+            </div>
+          </div>
+
+          <div class="transactions-analysis-summary">
+            @for (card of analysisSummaryCards(); track card.label) {
+              <article class="transactions-analysis-card">
+                <div class="transactions-analysis-card-head">
+                  <span class="material-symbols-rounded">{{ card.icon }}</span>
+                  <span class="transactions-analysis-card-label">{{ card.label }}</span>
+                </div>
+                <strong>{{ card.value }}</strong>
+                <p>{{ card.detail }}</p>
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      <section class="transactions-analysis-tip">
+        <div class="transactions-analysis-tip-copy">
+          <span class="transactions-analysis-tip-kicker">{{ analysisContext().tipTitle }}</span>
+          <strong>Passer de l analyse a l action</strong>
+          <p class="transactions-analysis-tip-main">{{ analysisContext().tipDescription }}</p>
+          <p class="transactions-analysis-tip-secondary">
+            Utilisez cette lecture ciblee pour passer rapidement d un constat a une action concrete dans votre pilotage budgetaire.
+          </p>
+        </div>
+
+        <div class="transactions-analysis-actions">
+          <button type="button" class="btn-primary" (click)="goToBudgetAction()">Definir un budget</button>
+          <button type="button" class="btn-ghost" (click)="clearFilters()">Reinitialiser l analyse</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  <section class="transactions-filters-shell" [class.is-analysis]="isRecommendationAnalysisMode()">
+    <div class="transactions-filters-head">
+      <div>
+        <span class="transactions-filters-kicker">{{ isRecommendationAnalysisMode() ? 'Filtres d analyse' : 'Filtres transactions' }}</span>
+        <h3>{{ isRecommendationAnalysisMode() ? 'Affinez cette lecture sans quitter le contexte IA' : 'Recherchez, triez et parcourez vos transactions' }}</h3>
+      </div>
+
+      <span class="transactions-filters-count">
+        {{ isRecommendationAnalysisMode() ? filteredTotalCount() : totalElements() }} transaction(s)
+      </span>
+    </div>
+
+    <div class="filters-bar">
+      <label class="filter-field filter-field-search">
+        <span class="filter-label">Recherche</span>
+        <div class="search-wrapper">
+          <span class="material-symbols-rounded">search</span>
+          <input
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="updateSearchQuery($event)"
+            placeholder="Rechercher par description ou commercant..."
+            class="search-input" />
+        </div>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-label">Tri</span>
+        <select [ngModel]="sortBy()" (ngModelChange)="updateSortBy($event)" class="filter-select">
+          <option value="date-desc">Date (plus recent)</option>
+          <option value="date-asc">Date (plus ancien)</option>
+          <option value="amount-desc">Montant (decroissant)</option>
+          <option value="amount-asc">Montant (croissant)</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-label">Type</span>
+        <select [ngModel]="filterType()" (ngModelChange)="updateFilterType($event)" class="filter-select">
+          <option value="">Tous les types</option>
+          <option value="DEPENSE">Depenses</option>
+          <option value="REVENU">Revenus</option>
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-label">Categorie</span>
+        <select [ngModel]="filterCategory()" (ngModelChange)="updateFilterCategory($event)" class="filter-select">
+          <option value="">Toutes les categories</option>
+          @for (category of categories; track category) {
+            <option [value]="category">{{ getCategoryLabel(category) }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="filter-field">
+        <span class="filter-label">Taille page</span>
+        <select [ngModel]="pageSize()" (ngModelChange)="updatePageSize($event)" class="filter-select">
+          <option [ngValue]="12">12</option>
+          <option [ngValue]="25">25</option>
+          <option [ngValue]="50">50</option>
+        </select>
+      </label>
+
+      <button
+        type="button"
+        class="filters-reset-icon"
+        title="Reinitialiser les filtres"
+        aria-label="Reinitialiser les filtres"
+        (click)="clearFilters()">
+        <span class="material-symbols-rounded">restart_alt</span>
+      </button>
+    </div>
+  </section>
+
+  @if (loadError()) {
+    <div class="error-banner">
+      <strong>Chargement incomplet.</strong>
+      <span>{{ loadError() }}</span>
+    </div>
+  }
+
+  <div class="table-card">
+    <div class="table-card-header">
+      <div>
+        <span class="table-card-kicker">{{ isRecommendationAnalysisMode() ? 'Transactions ciblees' : 'Vue transactions' }}</span>
+        <h3>{{ isRecommendationAnalysisMode() ? 'Les mouvements qui expliquent la recommandation' : 'Toutes vos transactions disponibles' }}</h3>
+      </div>
+
+      <div class="table-card-meta">
+        <span class="table-card-pill">{{ filteredCount() }} visible(s)</span>
+        <span class="table-card-pill table-card-pill-accent">{{ categorizedVisibleCount() }} enrichie(s) ML</span>
+        <span class="table-card-pill table-card-pill-soft">
+          {{ isRecommendationAnalysisMode() ? filteredTotalCount() : totalElements() }} au total
+        </span>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="loading-state">
+        @for (row of [1, 2, 3, 4, 5]; track row) {
+          <div class="skeleton-row"></div>
+        }
+      </div>
+    } @else if (!hasAnyTransactions()) {
+      <div class="empty-state">
+        <span class="empty-mark">TX</span>
+        <h3>Aucune transaction pour le moment</h3>
+        <p>Cette vue centrale reunira automatiquement vos transactions importees, vos saisies manuelles et les mouvements remontes depuis vos cartes associees.</p>
+        <div class="empty-actions">
+          <a routerLink="/transactions/new" class="btn-secondary">Saisie manuelle</a>
+          <a routerLink="/my-cards" class="btn-ghost">Associer une carte</a>
+        </div>
+      </div>
+    } @else if (filteredTransactions().length === 0) {
+      <div class="empty-state empty-state-compact">
+        <span class="empty-mark empty-mark-soft">FX</span>
+        <h3>Aucun resultat avec ces filtres</h3>
+        <p>Des transactions existent bien dans votre vue globale, mais aucun mouvement ne correspond aux criteres actuels.</p>
+        <div class="empty-actions">
+          <button type="button" class="btn-secondary" (click)="clearFilters()">Reinitialiser les filtres</button>
+        </div>
+      </div>
+    } @else {
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Description</th>
+              <th>Commercant</th>
+              <th>Categorie</th>
+              <th>Type</th>
+              <th>Methode</th>
+              <th class="amount-col">Montant</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (transaction of visibleTransactions(); track transaction.id) {
+              <tr>
+                <td class="date-cell">
+                  <span class="date-main">{{ formatDate(transaction.date) }}</span>
+                </td>
+
+                <td>
+                  <span class="tx-desc">{{ transaction.description }}</span>
+                  <div class="tx-meta-row">
+                    @if (getSourceMeta(transaction); as sourceMeta) {
+                      <span
+                        class="source-badge source-origin-badge"
+                        [style.background]="sourceMeta.background"
+                        [style.color]="sourceMeta.color"
+                        [style.borderColor]="sourceMeta.border">
+                        {{ sourceMeta.label }}
+                      </span>
+                    }
+                    @if (transaction.cardLast4) {
+                      <span class="card-badge">**** {{ transaction.cardLast4 }}</span>
+                    }
+                  </div>
+                </td>
+
+                <td>
+                  <span class="merchant">{{ transaction.merchantName || '-' }}</span>
+                </td>
+
+                <td>
+                  <span
+                    class="category-badge"
+                    [style.background]="getCategoryBackground(transaction.category)"
+                    [style.color]="getCategoryColor(transaction.category)">
+                    {{ getCategoryIcon(transaction.category) }} {{ getCategoryLabel(transaction.category) }}
+                  </span>
+                </td>
+
+                <td class="type-cell">
+                  <div class="type-badge-row">
+                    <span class="type-badge" [class]="transaction.type.toLowerCase()">
+                      {{ transaction.type === 'DEPENSE' ? 'Depense' : 'Revenu' }}
+                    </span>
+                    @if (transaction.type === 'REVENU' && transaction.isIncomeClassified) {
+                      <app-income-classification-display
+                        [finalType]="transaction.incomeType"
+                        [confidence]="transaction.incomeConfidence"
+                        [reason]="transaction.incomeReason"
+                        [explanation]="transaction.incomeExplanation"
+                        [showConfidence]="false"
+                      />
+                    }
+                  </div>
+                </td>
+
+                <td>
+                  @if (getMethodMeta(transaction.paymentMethod); as methodMeta) {
+                    <span class="method-badge">{{ methodMeta.icon }} {{ methodMeta.label }}</span>
+                  }
+                </td>
+
+                <td class="amount-cell">
+                  <span [class]="amountClass(transaction)">
+                    {{ formatAmount(transaction) }}
+                  </span>
+                </td>
+
+                <td>
+                  <div class="actions">
+                    @if (canManageCashBreakdown(transaction)) {
+                      <a [routerLink]="['/transactions', transaction.id, 'cash-breakdown']" class="btn-icon" title="Cash breakdown">
+                        <span class="material-symbols-rounded">account_balance_wallet</span>
+                      </a>
+                    }
+                    <a [routerLink]="['/transactions', transaction.id, 'edit']" class="btn-icon" title="Modifier">
+                      <span class="material-symbols-rounded">edit</span>
+                    </a>
+                    <button class="btn-icon danger" (click)="delete(transaction)" title="Supprimer">
+                      <span class="material-symbols-rounded">delete</span>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="transactions-mobile-list" aria-label="Transactions en mode cartes">
+        @for (transaction of visibleTransactions(); track transaction.id) {
+          <article class="transaction-mobile-card">
+            <div class="transaction-mobile-top">
+              <div class="transaction-mobile-date-block">
+                <span class="transaction-mobile-kicker">Transaction</span>
+                <strong>{{ formatDate(transaction.date) }}</strong>
+              </div>
+
+              <span class="transaction-mobile-amount" [class]="amountClass(transaction)">
+                {{ formatAmount(transaction) }}
+              </span>
+            </div>
+
+            <div class="transaction-mobile-main">
+              <div class="transaction-mobile-title-block">
+                <h4>{{ transaction.description }}</h4>
+                <p>{{ transaction.merchantName || 'Commercant non renseigne' }}</p>
+              </div>
+
+              <span
+                class="category-badge transaction-mobile-category"
+                [style.background]="getCategoryBackground(transaction.category)"
+                [style.color]="getCategoryColor(transaction.category)">
+                {{ getCategoryIcon(transaction.category) }} {{ getCategoryLabel(transaction.category) }}
+              </span>
+            </div>
+
+            <div class="transaction-mobile-chip-row">
+              @if (getSourceMeta(transaction); as sourceMeta) {
+                <span
+                  class="source-badge source-origin-badge"
+                  [style.background]="sourceMeta.background"
+                  [style.color]="sourceMeta.color"
+                  [style.borderColor]="sourceMeta.border">
+                  {{ sourceMeta.label }}
+                </span>
+              }
+
+              @if (getMethodMeta(transaction.paymentMethod); as methodMeta) {
+                <span class="transaction-mobile-chip">{{ methodMeta.icon }} {{ methodMeta.label }}</span>
+              }
+
+              @if (transaction.cardLast4) {
+                <span class="card-badge">**** {{ transaction.cardLast4 }}</span>
+              }
+            </div>
+
+            <div class="transaction-mobile-grid">
+              <section class="transaction-mobile-panel">
+                <span class="transaction-mobile-panel-label">Type et impact</span>
+
+                <div class="transaction-mobile-flow">
+                  <div class="type-badge-row">
+                    <span class="type-badge" [class]="transaction.type.toLowerCase()">
+                      {{ transaction.type === 'DEPENSE' ? 'Depense' : 'Revenu' }}
+                    </span>
+
+                    @if (transaction.type === 'REVENU' && transaction.isIncomeClassified) {
+                      <app-income-classification-display
+                        [finalType]="transaction.incomeType"
+                        [confidence]="transaction.incomeConfidence"
+                        [reason]="transaction.incomeReason"
+                        [explanation]="transaction.incomeExplanation"
+                        [showConfidence]="false"
+                      />
+                    }
+                  </div>
+
+                  <p class="transaction-mobile-flow-copy">
+                    {{ transaction.type === 'DEPENSE'
+                      ? 'Cette operation sort de votre budget actif et impacte vos analyses de depenses.'
+                      : 'Cette operation alimente vos revenus et entre dans vos syntheses de cashflow.' }}
+                  </p>
+                </div>
+              </section>
+            </div>
+
+            <div class="transaction-mobile-actions">
+              @if (canManageCashBreakdown(transaction)) {
+                <a [routerLink]="['/transactions', transaction.id, 'cash-breakdown']" class="btn-icon mobile-action-btn" title="Cash breakdown">
+                  <span class="material-symbols-rounded">account_balance_wallet</span>
+                  <span>Cash</span>
+                </a>
+              }
+
+              <a [routerLink]="['/transactions', transaction.id, 'edit']" class="btn-icon mobile-action-btn" title="Modifier">
+                <span class="material-symbols-rounded">edit</span>
+                <span>Modifier</span>
+              </a>
+
+              <button class="btn-icon mobile-action-btn danger" (click)="delete(transaction)" title="Supprimer">
+                <span class="material-symbols-rounded">delete</span>
+                <span>Supprimer</span>
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+
+      <div class="table-footer">
+        <div class="summary">
+          <span class="sum-item">
+            <span class="sum-label">Total depenses :</span>
+            <span class="sum-value negative">-{{ totalDepenses() | number:'1.2-2' }} DT</span>
+          </span>
+          <span class="sum-item">
+            <span class="sum-label">Total revenus :</span>
+            <span class="sum-value positive">+{{ totalRevenus() | number:'1.2-2' }} DT</span>
+          </span>
+          <span class="sum-item">
+            <span class="sum-label">Net :</span>
+            <span class="sum-value" [class.positive]="net() >= 0" [class.negative]="net() < 0">
+              {{ net() | number:'1.2-2' }} DT
+            </span>
+          </span>
+        </div>
+      </div>
+
+      @if (totalPages() > 1) {
+        <div class="pagination-section">
+          <div class="pagination-info">
+            <span>Page {{ visiblePageIndex() + 1 }} sur {{ totalPages() }}</span>
+            <span class="divider">-</span>
+            <span>{{ totalElements() }} transaction(s) au total</span>
+          </div>
+
+          <div class="pagination-controls">
+            <button class="btn-ghost" (click)="previousPage()" [disabled]="visiblePageIndex() === 0">Precedent</button>
+
+            <div class="page-numbers">
+              @for (page of getPageNumbers(); track page) {
+                <button class="page-btn" [class.active]="page === visiblePageIndex()" (click)="goToPage(page)">
+                  {{ page + 1 }}
+                </button>
+              }
+            </div>
+
+            <button class="btn-ghost" (click)="nextPage()" [disabled]="visiblePageIndex() === totalPages() - 1">Suivant</button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <div *ngIf="showDeleteAllModal" class="modal-backdrop" (click)="closeDeleteAllModal()">
+    <section
+      class="delete-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-all-title"
+      (click)="$event.stopPropagation()">
+      <header class="delete-modal-head">
+        <div>
+          <span class="delete-modal-kicker">Suppression globale</span>
+          <h2 id="delete-all-title">Supprimer toutes les transactions ?</h2>
+          <p>Cette action est irreversible. Toutes les transactions de l utilisateur connecte seront supprimees, y compris celles actuellement masquees par la pagination ou les filtres.</p>
+        </div>
+        <span class="delete-modal-count-pill">{{ totalTransactionCount() }} transaction(s)</span>
+      </header>
+
+      <div class="delete-modal-warning">
+        <span class="material-symbols-rounded">warning</span>
+        <div>
+          <strong>Verification manuelle requise</strong>
+          <p>Pour confirmer la suppression definitive, tapez exactement <strong>SUPPRIMER</strong> dans le champ ci-dessous.</p>
+        </div>
+      </div>
+
+      <label class="delete-modal-field">
+        <span>Confirmation obligatoire</span>
+        <input
+          type="text"
+          class="delete-modal-input"
+          [(ngModel)]="deleteAllConfirmationText"
+          (ngModelChange)="updateDeleteAllConfirmationText($event)"
+          placeholder="Tapez SUPPRIMER"
+          autocomplete="off"
+          spellcheck="false" />
+      </label>
+
+      <div *ngIf="deleteAllError" class="delete-modal-error">
+        <span class="material-symbols-rounded">error</span>
+        <span>{{ deleteAllError }}</span>
+      </div>
+
+      <footer class="delete-modal-actions">
+        <button type="button" class="btn-secondary" (click)="closeDeleteAllModal()" [disabled]="isDeletingAll">
+          Annuler
+        </button>
+        <button
+          type="button"
+          class="btn-danger-premium"
+          (click)="confirmDeleteAll()"
+          [disabled]="isDeletingAll || !isDeleteAllConfirmationValid">
+          @if (isDeletingAll) {
+            <span class="delete-modal-spinner"></span>
+          } @else {
+            <span class="material-symbols-rounded">delete_forever</span>
+          }
+          <span>{{ isDeletingAll ? 'Suppression en cours...' : 'Supprimer definitivement' }}</span>
+        </button>
+      </footer>
+    </section>
+  </div>
+</div>

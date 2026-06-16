@@ -1,0 +1,27 @@
+@if (getBadgeMeta(); as badgeMeta) {
+  <div class="income-display" [class.income-display--end]="align === 'end'">
+    <div class="income-display__topline" [class.income-display__topline--end]="align === 'end'">
+      <span class="income-display__chip" [class]="'income-display__chip income-display__chip--' + badgeMeta.tone">
+        {{ badgeMeta.label }}
+      </span>
+
+      @if (getTooltipText(); as tooltipText) {
+        <span class="income-display__info" tabindex="0" aria-label="Details classification revenu">
+          <span class="material-symbols-rounded">info</span>
+          <span class="income-display__tooltip" [class.income-display__tooltip--end]="align === 'end'">
+            {{ tooltipText }}
+          </span>
+        </span>
+      }
+    </div>
+
+    @if (showConfidence && getConfidenceLabel(); as confidenceLabel) {
+      <span
+        class="income-display__confidence"
+        [class]="'income-display__confidence income-display__confidence--' + (getConfidenceTone() || 'medium')"
+      >
+        {{ confidenceLabel }}
+      </span>
+    }
+  </div>
+}

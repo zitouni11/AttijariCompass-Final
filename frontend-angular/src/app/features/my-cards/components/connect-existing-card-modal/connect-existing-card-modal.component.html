@@ -1,0 +1,122 @@
+<div class="modal-overlay" (click)="closeFromBackdrop($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="connect-existing-card-title">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">Rattachement sandbox</span>
+        <h2 id="connect-existing-card-title">Ajouter une carte existante</h2>
+        <p>Reconnectez une carte deja generee sur cet appareil ou utilisez directement son identifiant sandbox.</p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close()" aria-label="Fermer">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </header>
+
+    <div class="helper-strip">
+      <span class="helper-chip">Connexion instantanee</span>
+      <span class="helper-chip">Aucun debit reel</span>
+      <span class="helper-chip">Compatibilite sandbox</span>
+    </div>
+
+    @if (cards.length) {
+      <section class="known-cards-shell">
+        <div class="section-label-row">
+          <span class="section-label">Cartes memorisees sur cet appareil</span>
+          <span class="section-count">{{ cards.length }} carte(s)</span>
+        </div>
+
+        <div class="known-cards-list">
+          @for (card of cards; track card.testCardId) {
+            <article class="known-card">
+              <div class="known-card-main">
+                <div class="known-card-top">
+                  <span class="card-chip">{{ card.cardType }}</span>
+                  @if (card.profile) {
+                    <span class="status-chip">{{ card.profile }}</span>
+                  }
+                </div>
+
+                <strong>{{ card.maskedCardNumber }}</strong>
+                <p>{{ card.bankName }}</p>
+                <span>{{ card.holderName }}</span>
+              </div>
+
+              <div class="known-card-meta">
+                <span>ID sandbox {{ card.testCardId }}</span>
+                <span>Memorisee le {{ formatDate(card.createdAt) }}</span>
+                @if (card.transactionCount !== null) {
+                  <span>{{ card.transactionCount }} transaction(s) generee(s)</span>
+                }
+              </div>
+
+              <button
+                type="button"
+                class="btn-primary"
+                (click)="connectCard(card.testCardId)"
+                [disabled]="loading"
+              >
+                @if (loading) {
+                  <span class="spinner"></span>
+                  Ajout...
+                } @else {
+                  Ajouter a mon compte
+                }
+              </button>
+            </article>
+          }
+        </div>
+      </section>
+    } @else {
+      <article class="empty-state">
+        <span class="material-symbols-rounded">credit_card_off</span>
+        <div>
+          <strong>Aucune carte memorisee localement</strong>
+          <p>Vous pouvez tout de meme rattacher une carte existante si vous connaissez son identifiant sandbox.</p>
+        </div>
+      </article>
+    }
+
+    <form class="manual-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="manual-heading">
+        <div>
+          <span class="section-label">Connexion manuelle</span>
+          <h3>Utiliser l identifiant d une carte sandbox</h3>
+        </div>
+      </div>
+
+      <label class="field">
+        <span class="field-label">Identifiant de la carte sandbox</span>
+        <input type="number" formControlName="testCardId" min="1" placeholder="Ex: 12" />
+        @if (getError(); as fieldError) {
+          <span class="field-error">{{ fieldError }}</span>
+        }
+      </label>
+
+      <p class="field-help">
+        Utilisez cette option si la carte a ete generee ailleurs ou si elle n apparait pas encore dans la liste locale.
+      </p>
+
+      @if (error) {
+        <article class="action-error">
+          <span class="material-symbols-rounded">error</span>
+          <div>
+            <strong>Connexion impossible</strong>
+            <p>{{ error }}</p>
+          </div>
+        </article>
+      }
+
+      <footer class="modal-actions">
+        <button type="button" class="btn-secondary" (click)="close()" [disabled]="loading">Annuler</button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          @if (loading) {
+            <span class="spinner"></span>
+            Ajout...
+          } @else {
+            Ajouter cette carte
+          }
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

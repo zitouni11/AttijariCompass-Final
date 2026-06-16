@@ -1,0 +1,39 @@
+<svg width="920" height="240" viewBox="0 0 920 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="warmStroke" x1="58" y1="192" x2="219" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B92526"/>
+      <stop offset="0.42" stop-color="#D94A2F"/>
+      <stop offset="0.72" stop-color="#F28C28"/>
+      <stop offset="1" stop-color="#F6B23C"/>
+    </linearGradient>
+    <linearGradient id="needleWarm" x1="97" y1="180" x2="214" y2="72" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D12F2B"/>
+      <stop offset="0.55" stop-color="#EA6F2F"/>
+      <stop offset="1" stop-color="#F6B23C"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="340" height="240" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#081C4A" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#shadow)" transform="translate(18 14)">
+    <path
+      d="M125 12C102 36 85 52 71 69C52 92 42 116 42 140C42 173 61 199 94 217L112 198C84 182 68 163 68 139C68 122 76 106 90 88C99 77 112 64 128 48C143 64 156 77 165 88C179 106 187 122 187 139C187 163 171 182 143 198L161 217C194 199 213 173 213 140C213 116 203 92 184 69C170 52 153 36 131 12L125 4L125 12Z"
+      fill="url(#warmStroke)"
+    />
+    <path
+      d="M125 48C108 67 96 80 88 92C77 107 72 120 72 136C72 156 82 173 100 187L114 164C105 156 101 147 101 136C101 129 104 121 110 113C115 107 121 100 129 91C137 100 143 107 148 113C154 121 157 129 157 136C157 147 153 156 144 164L158 187C176 173 186 156 186 136C186 120 181 107 170 92C162 80 150 67 133 48L128 42L125 48Z"
+      fill="#FDFDFE"
+    />
+    <path d="M79 184L113 108L194 44L147 144L79 184Z" fill="url(#needleWarm)"/>
+    <path d="M96 170L120 116L97 138L96 170Z" fill="#BE242A" fill-opacity="0.72"/>
+    <circle cx="125" cy="118" r="15" fill="#FFFFFF" stroke="#D94A2F" stroke-width="8"/>
+  </g>
+
+  <text x="285" y="108" fill="#0F2D7A" font-family="Sora, 'Segoe UI', sans-serif" font-size="84" font-weight="700" letter-spacing="-2">
+    Attijari
+  </text>
+  <text x="285" y="186" fill="#081C4A" font-family="Sora, 'Segoe UI', sans-serif" font-size="74" font-weight="500" letter-spacing="-1.6">
+    Compass
+  </text>
+</svg>

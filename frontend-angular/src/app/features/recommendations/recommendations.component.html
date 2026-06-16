@@ -1,0 +1,485 @@
+<div class="recommendations-page">
+  <header class="page-toolbar">
+    <div class="toolbar-copy">
+      <span class="rec-eyebrow">Attijari Compass Advisory</span>
+      <h1 class="page-title">Recommandations IA</h1>
+      <p class="page-subtitle">
+        Une lecture simple pour comprendre votre situation, votre priorité du mois et l’action à lancer maintenant.
+      </p>
+    </div>
+
+    <button
+      class="refresh-button"
+      type="button"
+      (click)="loadRecommendations(true)"
+      [disabled]="loading() || refreshing() || recommendationsDisabled()"
+    >
+      <span class="refresh-icon" [class.spinning]="loading() || refreshing()"></span>
+      <span>{{ loading() || refreshing() ? 'Actualisation...' : 'Actualiser' }}</span>
+    </button>
+  </header>
+
+  @if (recommendationsDisabled()) {
+    <section class="feedback-card feedback-error">
+      <div class="feedback-icon">!</div>
+      <h2>Module indisponible</h2>
+      <p>{{ recommendationsDisabledMessage() }}</p>
+    </section>
+  } @else if (loading() && !response()) {
+    <section class="loading-shell">
+      <div class="loading-spinner"></div>
+      <span class="rec-eyebrow">Analyse en cours</span>
+      <h2>Votre copilote financier se prépare</h2>
+      <p>Nous synthétisons vos recommandations et votre trajectoire pour en faire une lecture immédiate.</p>
+    </section>
+
+    <section class="loading-grid">
+      <div class="skeleton-card skeleton-summary"></div>
+      <div class="skeleton-card skeleton-priority"></div>
+      <div class="skeleton-card skeleton-plan"></div>
+      <div class="skeleton-card skeleton-simulation"></div>
+    </section>
+  } @else if (error() && !response()) {
+    <section class="feedback-card feedback-error">
+      <div class="feedback-icon">!</div>
+      <h2>Chargement impossible</h2>
+      <p>{{ error() }}</p>
+        <button class="secondary-button" type="button" (click)="loadRecommendations()" [disabled]="recommendationsDisabled()">
+        Réessayer
+      </button>
+    </section>
+  } @else {
+    @if (error() && response()) {
+      <section class="feedback-inline">
+        <strong>Mise à jour momentanément indisponible.</strong>
+        <span>{{ error() }}</span>
+      </section>
+    }
+
+    @if (hasRecommendations()) {
+      @if (heroSummary(); as hero) {
+        <section class="summary-band">
+          <div class="summary-copy">
+            <span class="rec-eyebrow">Hero summary</span>
+            <h2>En quelques secondes, voici l essentiel.</h2>
+            <p>{{ hero.summaryText }}</p>
+          </div>
+
+          <div class="summary-metrics">
+            <article class="summary-metric" title="Indique la tendance générale de votre mois sans afficher de score chiffré.">
+              <span class="metric-label">Santé du mois</span>
+              <strong class="status-value" [ngClass]="getCurrentMonthStatusClass()">
+                {{ summary()?.currentMonthSeverity ? getCurrentMonthStatusLabel() : hero.statusLabel }}
+              </strong>
+              <span class="metric-note">{{ summary()?.currentMonthSeverity ? getCurrentMonthInsight() : getStatusInsight(summary()?.globalStatus) }}</span>
+              @if (summary()?.currentMonthSeverity) {
+                <span class="status-value month-status-pill" [ngClass]="getCurrentMonthStatusClass()">
+                  Priorité : {{ getCurrentMonthStatusLabel() }}
+                </span>
+              }
+            </article>
+
+            <article class="summary-metric" title="Indique le niveau d’urgence des actions recommandées pour atteindre vos objectifs.">
+              <span class="metric-label">Statut global</span>
+              <strong class="status-value" [ngClass]="hero.statusClass">{{ hero.statusLabel }}</strong>
+              <span class="metric-note">
+                {{ summary()?.currentMonthSeverity ? getCurrentMonthInsight() : getStatusInsight(summary()?.globalStatus) }}
+              </span>
+            </article>
+
+            @if (hasActiveGoal()) {
+            <article class="summary-metric">
+              <span class="metric-label">Impact estimé sur l’objectif</span>
+              <strong>{{ hero.impactLabel }}</strong>
+              <span class="metric-note">Projection du plan recommandé</span>
+            </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (primaryRecommendation(); as recommendation) {
+        <section class="priority-panel" [ngClass]="recommendation.priorityToneClass">
+          <div class="priority-main">
+            <div class="priority-copy">
+              <span class="rec-eyebrow">Votre priorité ce mois</span>
+              <h2>{{ recommendation.title }}</h2>
+              <p>{{ getPriorityMonthSentence(recommendation) }}</p>
+            </div>
+
+            <div class="priority-metrics">
+              <article class="priority-metric">
+                <span class="metric-label">Impact mensuel estimé</span>
+                <strong>{{ getRecommendationMonthlyImpactDisplayPublic(recommendation) }}</strong>
+              </article>
+
+              @if (hasActiveGoal()) {
+              <article class="priority-metric">
+                <span class="metric-label">Impact objectif</span>
+                <strong>{{ getRecommendationGoalImpactDisplayPublic(recommendation) }}</strong>
+              </article>
+              }
+            </div>
+          </div>
+
+          <div class="priority-action">
+            <div class="priority-action-copy">
+              <span class="metric-label">Action recommandée</span>
+              <strong>{{ getRecommendationActionLine(recommendation) }}</strong>
+              <span class="priority-action-note">Le prochain pas concret a lancer pour creer un effet visible rapidement.</span>
+            </div>
+
+            <div class="priority-action-footer">
+              @if (getBudgetRecommendationStatusLabel(recommendation); as budgetStatus) {
+                <span class="inline-note">{{ budgetStatus }}</span>
+              }
+
+              <button
+                class="recommendation-cta-button"
+                type="button"
+                [ngClass]="recommendation.actionContext.toneClass"
+                (click)="onRecommendationAction(recommendation, 'primary')"
+              >
+                {{ recommendation.primaryActionLabel }}
+              </button>
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (secondaryRecommendations().length > 0) {
+        <section class="plan-panel">
+          <div class="section-head">
+            <div>
+              <span class="rec-eyebrow">Plan d action simplifie</span>
+              <h2>Les autres actions utiles</h2>
+              <p>Trois leviers complémentaires maximum, à ouvrir uniquement si vous souhaitez aller plus loin.</p>
+            </div>
+          </div>
+
+          <div class="plan-list">
+            @for (recommendation of secondaryRecommendations(); track recommendation.id) {
+              <article class="plan-item">
+                <div class="plan-item-row">
+                  <div class="plan-item-main">
+                    <span class="plan-rank">{{ $index + 1 }}</span>
+                    <span class="material-symbols-rounded plan-theme-icon" aria-hidden="true">
+                      {{ getRecommendationIcon(recommendation) }}
+                    </span>
+                    <div class="plan-item-copy">
+                      <h3>{{ recommendation.title }}</h3>
+                      <p>{{ getRecommendationSummary(recommendation) }}</p>
+                    </div>
+                  </div>
+
+                  <div class="plan-item-metrics">
+                    <div class="plan-item-metric">
+                      <span class="metric-label">Impact mensuel estimé</span>
+                      <strong>{{ getRecommendationMonthlyImpactDisplayPublic(recommendation) }}</strong>
+                    </div>
+
+                    @if (hasActiveGoal()) {
+                      <div class="plan-item-metric">
+                        <span class="metric-label">Objectif estimé</span>
+                        <strong>{{ getRecommendationGoalImpactDisplayPublic(recommendation) }}</strong>
+                      </div>
+                    }
+                  </div>
+
+                  <button
+                    class="plan-toggle"
+                    type="button"
+                    (click)="toggleRecommendationDetails(recommendation)"
+                  >
+                    <span>{{ isRecommendationDetailsExpanded(recommendation) ? 'Masquer le détail' : 'Voir le détail' }}</span>
+                    <span
+                      class="material-symbols-rounded plan-toggle-icon"
+                      [class.is-expanded]="isRecommendationDetailsExpanded(recommendation)"
+                    >
+                      expand_more
+                    </span>
+                  </button>
+                </div>
+
+                @if (isRecommendationDetailsExpanded(recommendation)) {
+                  <div class="plan-detail">
+                    <div class="plan-detail-text">
+                      <span class="metric-label">Pourquoi cette recommandation ?</span>
+                      @if (isRecommendationExplanationLoading(recommendation)) {
+                        <span class="explanation-skeleton"></span>
+                      } @else {
+                        <p>{{ getRecommendationDetailNarrative(recommendation) }}</p>
+                      }
+                    </div>
+
+                    <div class="plan-detail-grid">
+                      <div class="plan-detail-card">
+                        <span class="metric-label">Action recommandée</span>
+                        <strong>{{ getRecommendationActionLine(recommendation) }}</strong>
+                      </div>
+
+                      <div class="plan-detail-card">
+                        <div class="plan-detail-head">
+                          <span class="metric-label metric-label-help" [attr.title]="getVisualPotentialTooltip(recommendation)">
+                            Potentiel visuel
+                            <span class="material-symbols-rounded info-icon" aria-hidden="true">info</span>
+                          </span>
+                          <strong>{{ getRecommendationVisualPercentPublic(recommendation) }}%</strong>
+                        </div>
+                        <div class="detail-meter">
+                          <span class="detail-meter-fill" [style.width.%]="getRecommendationVisualPercentPublic(recommendation)"></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="plan-detail-footer">
+                      @if (getBudgetRecommendationStatusLabel(recommendation); as budgetStatus) {
+                        <span class="inline-note">{{ budgetStatus }}</span>
+                      }
+
+                      <button
+                        class="assistant-detail-button"
+                        type="button"
+                        (click)="openAssistantForRecommendation(recommendation)"
+                      >
+                        Demander plus de détails à l’Assistant IA
+                      </button>
+
+                      <button
+                        class="recommendation-cta-button"
+                        type="button"
+                        [ngClass]="recommendation.actionContext.toneClass"
+                        (click)="onRecommendationAction(recommendation)"
+                      >
+                        {{ recommendation.primaryActionLabel }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              </article>
+            }
+          </div>
+        </section>
+      }
+
+      @if (hasActiveGoal()) {
+        <section class="simulation-panel">
+          <div class="simulation-step">Étape 3/3 — Simuler l’impact</div>
+          <div class="section-head section-head-compact">
+            <div>
+              <span class="rec-eyebrow">Simulation interactive</span>
+              <h2>Tester un effort complémentaire</h2>
+              <p>Simulez l’impact d’un versement mensuel supplémentaire sur votre objectif.</p>
+            </div>
+          </div>
+
+          <div class="simulation-top">
+            <div class="scenario-switch">
+              @for (scenario of scenarioOptions; track scenario.key) {
+                <button
+                  class="scenario-button"
+                  type="button"
+                  [class.is-active]="isScenarioSelected(scenario.key)"
+                  (click)="setScenario(scenario.key)"
+                >
+                  <strong>{{ scenario.label }}</strong>
+                  <span>{{ scenario.description }}</span>
+                </button>
+              }
+            </div>
+
+            <div class="simulation-slider-panel">
+              <div class="slider-head">
+                <div>
+                  <span class="metric-label">Effort mensuel simulé</span>
+                  <strong>{{ getSimulationEffortLabel() }}</strong>
+                </div>
+
+                <div class="simulation-result-pill">
+                  <span class="metric-label">Gain estimé</span>
+                  <strong>{{ getSimulationMonthsLabel() }}</strong>
+                </div>
+              </div>
+
+              <input
+                #effortSlider
+                class="simulation-slider"
+                type="range"
+                min="0"
+                max="1000"
+                step="50"
+                [value]="simulationEffort()"
+                (input)="updateSimulationEffort(effortSlider.value)"
+              />
+
+              <div class="slider-scale">
+                <span>0 DT</span>
+                <span>500 DT</span>
+                <span>1000 DT</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="simulation-stats">
+            <article class="simulation-stat">
+              <span class="metric-label">Effort mensuel simulé</span>
+              <strong>{{ getSimulationEffortLabel() }}</strong>
+            </article>
+
+            <article class="simulation-stat">
+              <span class="metric-label">Date objectif actuelle</span>
+              <strong>{{ getCurrentGoalDateLabel() }}</strong>
+            </article>
+
+            <article class="simulation-stat">
+              <span class="metric-label">Date objectif simulée</span>
+              <strong>{{ getOptimizedGoalDateLabel() }}</strong>
+            </article>
+
+            <article class="simulation-stat simulation-stat-accent">
+              <span class="metric-label">Gain estimé en mois</span>
+              <strong>{{ getSimulationMonthsLabel() }}</strong>
+            </article>
+          </div>
+
+          <p class="simulation-insight" [ngClass]="'insight-' + dynamicInsight().tone">
+            {{ dynamicInsight().message }}
+          </p>
+        </section>
+      } @else {
+        <section class="simulation-panel simulation-empty-state">
+          <div class="simulation-step">Objectif</div>
+          <div class="empty-goal-state">
+            <span class="material-symbols-rounded" aria-hidden="true">flag</span>
+            <h2>Aucun objectif actif pour simuler un impact</h2>
+            <p>Créez un objectif financier pour visualiser l’effet de vos économies sur une date cible.</p>
+            <button class="recommendation-cta-button" type="button" (click)="goToGoals()">
+              Créer un objectif
+            </button>
+          </div>
+        </section>
+      }
+
+      <section class="analysis-shell">
+        <button class="analysis-toggle" type="button" (click)="toggleDetailedAnalysis()">
+          <div class="analysis-toggle-copy">
+            <span class="rec-eyebrow">Analyse détaillée</span>
+            <strong>Voir l’analyse détaillée</strong>
+            <span>Comprendre les leviers qui influencent votre trajectoire financière.</span>
+          </div>
+
+          <div class="analysis-toggle-side">
+            <span class="analysis-toggle-action">
+              {{ detailedAnalysisExpanded() ? 'Masquer' : 'Ouvrir' }}
+            </span>
+            <span
+              class="material-symbols-rounded analysis-toggle-icon"
+              [class.is-expanded]="detailedAnalysisExpanded()"
+            >
+              expand_more
+            </span>
+          </div>
+        </button>
+
+        @if (detailedAnalysisExpanded()) {
+          <div class="analysis-content">
+            <article class="analysis-card analysis-kpi-card">
+              <div class="analysis-card-head">
+                <div>
+                  <span class="rec-eyebrow">Résumé financier</span>
+                  <h3>Résumé financier de la période</h3>
+                </div>
+              </div>
+
+              <div class="analysis-kpi-grid">
+                @for (kpi of financialKpis(); track kpi.label) {
+                  <div class="analysis-kpi" [ngClass]="kpi.toneClass" [attr.title]="kpi.tooltip || null">
+                    <span class="material-symbols-rounded" aria-hidden="true">{{ kpi.icon }}</span>
+                    <span class="metric-label">{{ kpi.label }}</span>
+                    <strong>{{ kpi.value }}</strong>
+                  </div>
+                }
+              </div>
+            </article>
+
+            @if (hiddenDetailedLevers().length > 0) {
+              <article class="analysis-card secondary-compact-card">
+                <button class="secondary-button other-toggle" type="button" (click)="toggleOtherRecommendations()">
+                  {{ getOtherRecommendationsButtonLabel() }}
+                </button>
+
+                @if (otherRecommendationsExpanded()) {
+                  <div class="other-recommendations">
+                    @for (recommendation of hiddenDetailedLevers(); track recommendation.id) {
+                      <article class="other-recommendation-item">
+                        <span>{{ recommendation.title }}</span>
+                        <strong>{{ getRecommendationMonthlyImpactDisplayPublic(recommendation) }}</strong>
+                        <button type="button" class="plan-toggle" (click)="onRecommendationAction(recommendation)">
+                          {{ recommendation.primaryActionLabel }}
+                        </button>
+                      </article>
+                    }
+                  </div>
+                }
+              </article>
+            }
+
+            <article class="analysis-card advanced-details-card">
+              <button class="advanced-toggle" type="button" (click)="toggleAdvancedDetails()">
+                <span>{{ getAdvancedDetailsButtonLabel() }}</span>
+                <span class="material-symbols-rounded" [class.is-expanded]="advancedDetailsExpanded()">expand_more</span>
+              </button>
+
+              @if (advancedDetailsExpanded()) {
+                <div class="advanced-details-grid">
+                  @for (recommendation of advancedDetailRecommendations(); track recommendation.id) {
+                    <div class="advanced-detail-item">
+                      <h4>{{ recommendation.category || recommendation.sourceLabel }}</h4>
+                      @if (getAdvancedSignals(recommendation).length > 0) {
+                        <div class="signal-list">
+                          @for (signal of getAdvancedSignals(recommendation); track signal) {
+                            <span class="signal-chip">{{ signal }}</span>
+                          }
+                        </div>
+                      } @else {
+                        <span class="signal-chip">Détails techniques non fournis</span>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </article>
+          </div>
+        }
+      </section>
+    } @else {
+      <section class="feedback-card feedback-empty">
+        <div class="feedback-icon">IA</div>
+        <h2>Aucune recommandation pour le moment</h2>
+        <p>
+          Votre moteur IA n a pas remonte d action prioritaire sur cette analyse.
+          Revenez apres de nouvelles transactions ou actualisez la page pour relancer l evaluation.
+        </p>
+        <button class="secondary-button" type="button" (click)="loadRecommendations(true)" [disabled]="recommendationsDisabled()">
+          Actualiser
+        </button>
+      </section>
+    }
+  }
+</div>
+
+@if (budgetRecommendationModalData(); as budgetModalData) {
+  <app-recommendation-budget-action-modal
+    [data]="budgetModalData"
+    (closed)="closeBudgetRecommendationModal()"
+    (budgetSaved)="onBudgetTargetSaved($event)"
+  ></app-recommendation-budget-action-modal>
+}
+
+@if (securityRecommendationModalData(); as securityModalData) {
+  <app-recommendation-security-action-modal
+    [data]="securityModalData"
+    (closed)="closeSecurityRecommendationModal()"
+    (prepared)="prepareSecurityRecommendationPlan($event)"
+  ></app-recommendation-security-action-modal>
+}

@@ -1,0 +1,177 @@
+<section class="goal-detail-page">
+  <header class="page-hero">
+    <div class="hero-copy">
+      <a routerLink="/goals" class="back-link">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Retour aux objectifs</span>
+      </a>
+      <span class="hero-kicker">Objectif intelligent</span>
+      <h1>Detail de l objectif</h1>
+      <p>Une lecture premium avec pilotage, recommandations et storytelling IA.</p>
+    </div>
+
+    @if (goalId()) {
+      <div class="hero-actions">
+        <button class="btn-secondary" type="button" (click)="refreshAll()">Actualiser</button>
+        <a [routerLink]="['/goals', goalId(), 'edit']" class="btn-primary">Modifier</a>
+      </div>
+    }
+  </header>
+
+  @if (goalLoading()) {
+    <div class="hero-skeleton"></div>
+  } @else if (goalError()) {
+    <div class="error-banner">
+      <strong>Chargement impossible.</strong>
+      <span>{{ goalError() }}</span>
+    </div>
+  } @else {
+    @if (goal(); as goalData) {
+      <section class="summary-shell" id="summary-panel">
+        <article class="summary-main-card">
+          <div class="summary-top">
+            <div class="summary-icon">{{ goalIcon(goalData) }}</div>
+            <div class="summary-copy">
+              <span class="summary-eyebrow">Pilotage premium</span>
+              <h2>{{ goalName() }}</h2>
+              <p>{{ goalData.description || predictionSummary() }}</p>
+            </div>
+          </div>
+
+          <div class="summary-badges">
+            <span class="status-badge" [class]="'status-' + goalData.status.toLowerCase()">{{ statusLabel(goalData.status) }}</span>
+            <span class="type-badge">{{ typeLabel(goalData.type) }}</span>
+            <span class="score-badge" [class]="feasibilityTone().className">{{ feasibilityTone().label }}</span>
+          </div>
+
+          <div class="progress-card">
+            <div class="progress-head">
+              <span>Progression actuelle</span>
+              <strong>{{ progressPercent() | number:'1.0-0' }}%</strong>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [class]="progressClass()" [style.width.%]="progressPercent()"></div>
+            </div>
+            <div class="progress-caption">
+              <span>{{ formatCurrency(goalData.currentAmount) }}</span>
+              <span>/ {{ formatCurrency(goalData.targetAmount) }}</span>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+      <section class="stats-grid">
+        <article class="stat-card">
+          <span class="stat-label">Montant cible</span>
+          <strong>{{ formatCurrency(goalData.targetAmount) }}</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Montant actuel</span>
+          <strong>{{ formatCurrency(goalData.currentAmount) }}</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Reste a epargner</span>
+          <strong>{{ formatCurrency(goalData.remainingAmount) }}</strong>
+        </article>
+        <article class="stat-card">
+          <span class="stat-label">Date cible</span>
+          <strong>{{ formatDate(goalData.targetDate) }}</strong>
+        </article>
+      </section>
+
+      <section class="detail-grid bottom-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-kicker">Recommandations</span>
+              <h3>Actions suggerees</h3>
+              <p>Des leviers concrets pour accelerer l atteinte de votre objectif.</p>
+            </div>
+          </div>
+
+          @if (recommendationsLoading()) {
+            <div class="section-skeleton"></div>
+          } @else if (recommendationsError()) {
+            <div class="section-error">{{ recommendationsError() }}</div>
+          } @else if (hasRecommendationsData()) {
+            <div class="recommendations-list">
+              @for (recommendation of recommendations(); track recommendation.title + $index) {
+                <article class="recommendation-card">
+                  <div class="recommendation-head">
+                    <strong>{{ recommendation.title }}</strong>
+                    @if (recommendation.priority) {
+                      <span class="priority-badge">{{ recommendation.priority }}</span>
+                    }
+                  </div>
+
+                  <div class="recommendation-impact" [class]="recommendationImpactTone(recommendation)">
+                    <span class="impact-label">Impact visuel</span>
+                    <strong>{{ recommendationImpactValue(recommendation) }}</strong>
+                  </div>
+
+                  <p>{{ recommendation.message }}</p>
+
+                  @if (recommendation.blockingCategories.length > 0) {
+                    <div class="mini-chips">
+                      @for (category of recommendation.blockingCategories; track category.category || category.name || $index) {
+                        <span class="mini-chip">{{ blockingCategoryLabel(category) }}</span>
+                      }
+                    </div>
+                  }
+
+                  <div class="recommendation-actions">
+                    <a [routerLink]="['/goals', goalId(), 'edit']" class="btn-ghost-link">Modifier l objectif</a>
+                  </div>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="empty-inline">Aucune recommandation disponible pour cet objectif.</div>
+          }
+        </article>
+
+        <article class="panel storytelling-panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-kicker">Storytelling</span>
+              <h3>Narration IA</h3>
+              <p>Une lecture plus humaine de votre trajectoire financiere et de vos prochaines actions.</p>
+            </div>
+            <button class="btn-secondary" type="button" (click)="reloadStorytelling()">Regenerer</button>
+          </div>
+
+          @if (storytellingLoading()) {
+            <div class="section-skeleton tall"></div>
+          } @else if (storytellingError()) {
+            <div class="section-error">{{ storytellingError() }}</div>
+          } @else if (hasStoryData()) {
+            <div class="story-card" [class.story-fallback]="storytelling()?.fallback" [class.story-pulse]="storytellingPulse()">
+              <div class="story-aura"></div>
+              @if (storytelling()?.title) {
+                <h4>{{ storytelling()?.title }}</h4>
+              } @else {
+                <h4>Votre trajectoire racontee</h4>
+              }
+
+              @if (storytellingSummary()) {
+                <p class="story-summary">{{ storytellingSummary() }}</p>
+              }
+
+              @if (storytelling()?.message) {
+                <p>{{ storytelling()?.message }}</p>
+              }
+
+              <div class="story-meta">
+                <span>{{ storytelling()?.fallback ? 'Mode fallback' : 'Narration IA' }}</span>
+                <span>{{ storytelling()?.source || 'Source interne' }}</span>
+              </div>
+            </div>
+          } @else {
+            <div class="empty-inline">Aucune narration disponible pour cet objectif.</div>
+          }
+        </article>
+      </section>
+    }
+  }
+</section>

@@ -1,0 +1,340 @@
+<section class="cards-page">
+  <header class="page-header">
+    <div class="header-copy">
+      <span class="eyebrow">Carte connectee</span>
+      <h1>Detail de la carte</h1>
+      <p>
+        Consultez les informations de la carte selectionnee, pilotez sa synchronisation
+        et suivez ses transactions dans un espace dedie.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a class="btn btn-secondary" routerLink="/my-cards">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Retour a Mes cartes</span>
+      </a>
+    </div>
+  </header>
+
+  @if (activityBanner(); as banner) {
+    <article class="activity-banner" [class.info]="banner.tone === 'info'">
+      <span class="material-symbols-rounded">
+        {{ banner.tone === 'success' ? 'check_circle' : 'sync' }}
+      </span>
+
+      <div>
+        <strong>{{ banner.title }}</strong>
+        <p>{{ banner.description }}</p>
+      </div>
+    </article>
+  }
+
+  @if (pageError(); as errorMessage) {
+    <article class="state-banner state-banner-error">
+      <div>
+        <strong>Detail de carte indisponible</strong>
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-secondary" type="button" (click)="reloadCard()">
+          Reessayer
+        </button>
+        <a class="btn btn-primary" routerLink="/my-cards">Retour</a>
+      </div>
+    </article>
+  }
+
+  @if (loading()) {
+    <section class="loading-shell">
+      <div class="skeleton-card large"></div>
+      <div class="skeleton-card large"></div>
+      <div class="skeleton-card"></div>
+    </section>
+  } @else {
+    @if (card(); as currentCard) {
+      <section class="selected-card-panel selected-card-focus">
+        <div class="section-heading section-heading-spread">
+          <div>
+            <span class="eyebrow">Carte selectionnee</span>
+            <h2>{{ currentCard.maskedCardNumber }}</h2>
+            <p>{{ currentCard.bankName }} - {{ currentCard.cardType }}</p>
+          </div>
+
+          <div class="action-row">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              [disabled]="syncing()"
+              (click)="syncCurrentCard()"
+            >
+              @if (syncing()) {
+                <span class="spinner small"></span>
+              } @else {
+                <span class="material-symbols-rounded">sync</span>
+              }
+              <span>Synchroniser</span>
+            </button>
+
+            <button
+              class="btn btn-danger"
+              type="button"
+              [disabled]="disconnecting()"
+              (click)="requestDisconnectCard()"
+            >
+              @if (disconnecting()) {
+                <span class="spinner small"></span>
+              } @else {
+                <span class="material-symbols-rounded">delete</span>
+              }
+              <span>Dissocier</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="selected-card-focus-grid">
+          <article class="selected-card-visual">
+            <div class="visual-top">
+              <span>Attijari Sandbox</span>
+              <span>{{ currentCard.cardType }}</span>
+            </div>
+
+            <strong class="visual-number">{{ currentCard.maskedCardNumber }}</strong>
+
+            <div class="visual-bottom">
+              <div>
+                <span>Titulaire</span>
+                <strong>{{ currentCard.holderName }}</strong>
+              </div>
+
+              <div>
+                <span>Statut</span>
+                <strong>{{ getStatusLabel(currentCard) }}</strong>
+              </div>
+            </div>
+          </article>
+
+          <section class="selected-card-details">
+            <div class="selected-card-details-grid">
+              <article class="summary-item">
+                <span class="summary-label">Numero masque</span>
+                <strong>{{ currentCard.maskedCardNumber }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Titulaire</span>
+                <strong>{{ currentCard.holderName }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Expiration</span>
+                <strong>{{ getSelectedCardExpiryLabel(currentCard) }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Type</span>
+                <strong>{{ currentCard.cardType }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Banque</span>
+                <strong>{{ currentCard.bankName }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Statut</span>
+                <strong>{{ getStatusLabel(currentCard) }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Date de connexion</span>
+                <strong>{{ formatDateTime(currentCard.connectedAt) }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Derniere synchronisation</span>
+                <strong>{{ formatDateTime(currentCard.lastSyncAt) }}</strong>
+              </article>
+
+              <article class="summary-item summary-item-accent">
+                <span class="summary-label">Transactions affichees</span>
+                <strong>{{ cardInsights().transactionCount }}</strong>
+              </article>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <app-card-transactions
+        [card]="currentCard"
+        [transactions]="transactions()"
+        [loading]="transactionsLoading()"
+        [error]="transactionsError()"
+      />
+
+      <section class="secondary-zone">
+        <div class="section-heading section-heading-secondary">
+          <div>
+            <span class="eyebrow">Lecture complementaire</span>
+            <h2>Insights et signaux intelligents</h2>
+            <p>Ces analyses s appuient sur les transactions deja chargees pour enrichir la lecture de la carte.</p>
+          </div>
+        </div>
+
+        <div class="secondary-grid secondary-grid-main">
+          <section class="insights-panel panel-surface">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">Insights IA</span>
+                <h2>Lecture automatique des mouvements</h2>
+              </div>
+              <span class="section-count">
+                {{ transactionsLoading() ? 'Analyse en cours' : cardInsights().transactionCount + ' flux analyses' }}
+              </span>
+            </div>
+
+            <div class="insights-kpi-grid">
+              <article class="insight-kpi">
+                <span class="summary-label">Total depense</span>
+                <strong>{{ formatMoney(cardInsights().totalSpent) }}</strong>
+              </article>
+
+              <article class="insight-kpi insight-kpi-highlight">
+                <span class="summary-label">Total credite</span>
+                <strong>{{ formatMoney(cardInsights().totalCredited) }}</strong>
+              </article>
+
+              <article class="insight-kpi">
+                <span class="summary-label">Transactions</span>
+                <strong>{{ cardInsights().transactionCount }}</strong>
+              </article>
+            </div>
+
+            <div class="insight-detail-grid">
+              <article class="insight-detail">
+                <span class="summary-label">Categorie dominante</span>
+                <strong>{{ cardInsights().dominantCategory }}</strong>
+              </article>
+
+              <article class="insight-detail">
+                <span class="summary-label">Marchand le plus frequent</span>
+                <strong>{{ cardInsights().topMerchant }}</strong>
+              </article>
+            </div>
+
+            <article class="recurring-panel" [class.empty]="!cardInsights().recurringMerchants.length">
+              <div class="recurring-header">
+                <span class="material-symbols-rounded">auto_awesome</span>
+                <div>
+                  <strong>Paiements recurrents detectes</strong>
+                  <p>{{ cardInsights().recurringSummary }}</p>
+                </div>
+              </div>
+
+              @if (cardInsights().recurringMerchants.length) {
+                <div class="recurring-list">
+                  @for (merchant of cardInsights().recurringMerchants; track merchant.merchant) {
+                    <span class="recurring-chip">{{ merchant.merchant }} x{{ merchant.count }}</span>
+                  }
+                </div>
+              }
+            </article>
+          </section>
+
+          <section class="recommendations-panel panel-surface">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">Recommandations IA</span>
+                <h2>Actions utiles a envisager</h2>
+              </div>
+              <span class="section-count">{{ aiRecommendations().length }} priorite(s)</span>
+            </div>
+
+            <div class="recommendations-grid">
+              @for (recommendation of aiRecommendations(); track recommendation.title) {
+                <article class="recommendation-card">
+                  <span class="recommendation-icon material-symbols-rounded">{{ recommendation.icon }}</span>
+                  <div class="recommendation-copy">
+                    <strong>{{ recommendation.title }}</strong>
+                    <p>{{ recommendation.description }}</p>
+                    <span class="recommendation-emphasis">{{ recommendation.emphasis }}</span>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        </div>
+
+        <div class="secondary-grid">
+          <section class="alerts-panel panel-surface">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">Alertes / anomalies</span>
+                <h2>Points d attention a verifier</h2>
+              </div>
+              <span class="section-count">
+                {{ smartAlerts().length ? smartAlerts().length + ' alerte(s)' : 'RAS' }}
+              </span>
+            </div>
+
+            @if (smartAlerts().length) {
+              <div class="alerts-list">
+                @for (alert of smartAlerts(); track alert.title) {
+                  <article class="alert-card" [class.alert-card-high]="alert.tone === 'high'">
+                    <span class="alert-icon material-symbols-rounded">{{ alert.icon }}</span>
+                    <div class="alert-copy">
+                      <strong>{{ alert.title }}</strong>
+                      <p>{{ alert.description }}</p>
+                      <span class="alert-meta">{{ alert.meta }}</span>
+                    </div>
+                  </article>
+                }
+              </div>
+            } @else {
+              <article class="calm-state">
+                <span class="material-symbols-rounded">verified</span>
+                <div>
+                  <strong>Aucune anomalie forte detectee</strong>
+                  <p>Les flux actuellement charges ne montrent pas de signal critique evident.</p>
+                </div>
+              </article>
+            }
+          </section>
+
+          <section class="timeline-panel panel-surface">
+            <div class="section-heading">
+              <div>
+                <span class="eyebrow">Timeline d activite intelligente</span>
+                <h2>Faits marquants recents</h2>
+              </div>
+              <span class="section-count">{{ activityTimeline().length }} repere(s)</span>
+            </div>
+
+            <div class="timeline-list">
+              @for (event of activityTimeline(); track event.title) {
+                <article class="timeline-item" [class]="'timeline-item-' + event.tone">
+                  <span class="timeline-dot material-symbols-rounded">{{ event.icon }}</span>
+                  <div class="timeline-copy">
+                    <strong>{{ event.title }}</strong>
+                    <p>{{ event.detail }}</p>
+                    <span class="timeline-meta">{{ event.meta }}</span>
+                  </div>
+                </article>
+              }
+            </div>
+          </section>
+        </div>
+      </section>
+    }
+  }
+
+  @if (disconnectModalOpen() && card(); as currentCard) {
+    <app-disconnect-card-modal
+      [card]="currentCard"
+      [loading]="disconnecting()"
+      (closed)="closeDisconnectModal()"
+      (confirmed)="confirmDisconnectCard()"
+    />
+  }
+</section>

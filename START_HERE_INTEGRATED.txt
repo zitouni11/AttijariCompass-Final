@@ -1,0 +1,176 @@
+COMPASS INTEGRATED PROJECT
+==========================
+
+1. New integrated folder
+Path:
+c:\Users\ademz\OneDrive\Bureau\budget-planner\compass-integrated-project
+
+This folder now contains:
+- backend-spring
+- frontend-angular
+- backend-spring\attijari-compass-ml
+
+
+2. PostgreSQL
+Database used by PostgreSQL:
+- compassbd
+
+Important:
+- PostgreSQL normalizes unquoted names to lowercase
+- even if the requested name was CompassBD, the real local database available is compassbd
+
+Default backend connection now points to:
+- jdbc:postgresql://localhost:5432/compassbd
+- user: postgres
+- password: Leaders2003
+
+Config file:
+- backend-spring\src\main\resources\application.yml
+
+
+3. What was integrated
+- Spring Boot budget + alerts + dashboard flow kept in place
+- Angular budget + dashboard + transaction flow kept in place
+- Flask merchant Excel ML dataset integrated into the Python ML microservice
+- Governorate localization Excel dataset integrated into the Python ML microservice
+- New batch prediction flow added end-to-end:
+  - Python ML endpoint: /predict-batch
+  - Spring proxy endpoint: /api/categorization/bulk-predict
+  - Angular page: /transactions/ml-predictor
+- Existing transaction manual prediction flow remains active:
+  - Spring endpoint: /api/categorization/predict
+  - Angular transaction form uses it
+
+
+4. Main folders to know
+- backend-spring\src\main\java\com\adem\attijari_compass\controller
+  Spring REST controllers
+- backend-spring\src\main\java\com\adem\attijari_compass\service
+  Business logic
+- backend-spring\src\main\resources\db\migration
+  PostgreSQL structure and SQL migrations
+- backend-spring\attijari-compass-ml
+  Python ML microservice
+- frontend-angular\src\app\features\budgets
+  Budget UI
+- frontend-angular\src\app\features\dashboard
+  Dashboard UI
+- frontend-angular\src\app\features\transactions
+  Transaction UI
+- frontend-angular\src\app\features\ml
+  New merchant batch prediction UI
+
+
+5. How to start the full project
+
+Step A - Start the Python ML service
+Command:
+cd backend-spring\attijari-compass-ml
+python -m pip install -r requirements.txt
+python train.py
+python -m uvicorn app:app --host 127.0.0.1 --port 8001 --reload
+
+Quick check:
+http://127.0.0.1:8001/health
+
+
+Step B - Start the Spring Boot backend
+Recommended from the backend folder:
+cd backend-spring
+.\mvnw.cmd spring-boot:run
+
+If the Maven wrapper does not start correctly on your terminal:
+- run it from IntelliJ
+- or install Maven and use:
+  mvn spring-boot:run
+
+Backend URL:
+http://localhost:8082
+
+
+Step C - Start the Angular frontend
+Command:
+cd frontend-angular
+npm install
+npm start
+
+Frontend URL:
+http://localhost:4200
+
+
+6. What to test first
+
+Test 1 - ML single prediction
+- open the app
+- go to Transactions
+- click "Nouvelle transaction"
+- type a merchant like:
+  CARREFOUR LA MARSA > TUN
+- verify a category suggestion appears automatically
+
+Test 2 - ML batch prediction from UI
+- open:
+  /transactions/ml-predictor
+- upload an Excel or CSV file containing a merchant column
+- click "Lancer la prediction"
+- verify download of:
+  merchant_predictions_integrated.xlsx
+
+Test 3 - Budget and alerts
+- open:
+  /budgets
+- verify active budgets load
+- verify alert cards load
+
+Test 4 - Dashboard
+- open:
+  /dashboard
+- change month
+- verify monthly summary reloads
+
+
+7. Technical verification already done
+- PostgreSQL database CompassBD created
+- Python ML train.py executed successfully
+- Python ML single prediction tested successfully
+- Python ML batch endpoint tested successfully
+- Spring backend compilation verified successfully outside sandbox
+- Angular TypeScript check passed
+- Angular production build passed
+
+Notes:
+- Angular build reports CSS budget warnings on some existing large stylesheets
+- these warnings do not block the build
+
+
+8. Important endpoints
+- Spring prediction:
+  POST /api/categorization/predict
+- Spring batch prediction:
+  POST /api/categorization/bulk-predict
+- Spring budgets:
+  /api/budget-targets
+- Spring dashboard:
+  /api/dashboard
+- Python ML health:
+  GET /health
+- Python ML batch:
+  POST /predict-batch
+
+
+9. Files changed for this integration
+- backend-spring\src\main\resources\application.yml
+- backend-spring\src\main\java\com\adem\attijari_compass\service\MlCategorizationService.java
+- backend-spring\src\main\java\com\adem\attijari_compass\controller\CategorizationController.java
+- backend-spring\attijari-compass-ml\app.py
+- backend-spring\attijari-compass-ml\ml_core.py
+- backend-spring\attijari-compass-ml\train.py
+- backend-spring\attijari-compass-ml\requirements.txt
+- backend-spring\attijari-compass-ml\data\final_cleaned_and_updated.xlsx
+- backend-spring\attijari-compass-ml\data\municipality_governorate.xlsx
+- frontend-angular\src\app\core\services\categorization.service.ts
+- frontend-angular\src\app\app.routes.ts
+- frontend-angular\src\app\features\transactions\list\transactions-list.component.html
+- frontend-angular\src\app\features\ml\merchant-prediction.component.ts
+- frontend-angular\src\app\features\ml\merchant-prediction.component.html
+- frontend-angular\src\app\features\ml\merchant-prediction.component.css

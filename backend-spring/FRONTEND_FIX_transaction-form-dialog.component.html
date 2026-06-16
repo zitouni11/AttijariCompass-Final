@@ -1,0 +1,123 @@
+<!-- ✅ À COPIER DANS: src/app/components/transaction-form-dialog/transaction-form-dialog.component.html -->
+
+<h2 mat-dialog-title>
+  <span *ngIf="!data?.transaction">💳 Nouvelle transaction</span>
+  <span *ngIf="data?.transaction">✏️ Modifier transaction</span>
+</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="transactionForm">
+
+    <!-- Commerçant -->
+    <mat-form-field class="full-width">
+      <mat-label>Commerçant</mat-label>
+      <input matInput formControlName="merchantName" placeholder="Ex: Carrefour Market">
+      <mat-error *ngIf="transactionForm.get('merchantName')?.hasError('required')">
+        Le commerçant est obligatoire
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Montant -->
+    <mat-form-field class="full-width">
+      <mat-label>Montant (€)</mat-label>
+      <input matInput type="number" formControlName="amount" placeholder="45.50" step="0.01">
+      <mat-error *ngIf="transactionForm.get('amount')?.hasError('required')">
+        Le montant est obligatoire
+      </mat-error>
+      <mat-error *ngIf="transactionForm.get('amount')?.hasError('min')">
+        Le montant doit être positif
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Date -->
+    <mat-form-field class="full-width">
+      <mat-label>Date</mat-label>
+      <input matInput type="date" formControlName="date">
+    </mat-form-field>
+
+    <!-- Description -->
+    <mat-form-field class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput formControlName="description" rows="2"
+                placeholder="Ex: Courses hebdomadaires"></textarea>
+    </mat-form-field>
+
+    <!-- Derniers 4 chiffres de la carte -->
+    <mat-form-field class="full-width">
+      <mat-label>Derniers 4 chiffres carte</mat-label>
+      <input matInput formControlName="cardLast4" placeholder="1234" maxlength="4">
+      <mat-error *ngIf="transactionForm.get('cardLast4')?.hasError('required')">
+        Les 4 chiffres de la carte sont obligatoires
+      </mat-error>
+      <mat-error *ngIf="transactionForm.get('cardLast4')?.hasError('pattern')">
+        Doit être exactement 4 chiffres
+      </mat-error>
+    </mat-form-field>
+
+    <!-- Type -->
+    <mat-form-field class="full-width">
+      <mat-label>Type</mat-label>
+      <mat-select formControlName="type">
+        <mat-option value="DEPENSE">💸 Dépense</mat-option>
+        <mat-option value="REVENU">💰 Revenu</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Catégorie (optionnelle, sera auto-détectée) -->
+    <mat-form-field class="full-width" *ngIf="!autoCategory">
+      <mat-label>Catégorie (optionnel)</mat-label>
+      <mat-select formControlName="category">
+        <mat-option value="">-- Sera auto-détectée --</mat-option>
+        <mat-option *ngFor="let cat of categories" [value]="cat">
+          {{ cat }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Catégorie auto-détectée -->
+    <div *ngIf="autoCategory" class="alert alert-success">
+      🎯 Catégorie auto-détectée: <strong>{{ autoCategory }}</strong>
+    </div>
+
+    <!-- Erreur -->
+    <div *ngIf="error" class="alert alert-danger">
+      ❌ {{ error }}
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Annuler</button>
+  <button mat-raised-button color="primary"
+          [disabled]="!transactionForm.valid || loading"
+          (click)="onSubmit()">
+    <span *ngIf="!loading">Enregistrer</span>
+    <span *ngIf="loading">⏳ Enregistrement...</span>
+  </button>
+</mat-dialog-actions>
+
+<style>
+  .full-width {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+
+  .alert {
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+</style>
+

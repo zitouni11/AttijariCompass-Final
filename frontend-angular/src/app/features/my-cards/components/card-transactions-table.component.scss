@@ -1,0 +1,15 @@
+:host {
+  display: block;
+}
+
+.cards-badge-row-compact {
+  justify-content: flex-end;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+@media (max-width: 820px) {
+  .cards-badge-row-compact {
+    justify-content: flex-start;
+  }
+}

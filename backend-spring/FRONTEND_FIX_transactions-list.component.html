@@ -1,0 +1,129 @@
+§<!-- ✅ À COPIER DANS: src/app/components/transactions-list/transactions-list.component.html -->
+
+<div class="transactions-container">
+  <h2>📊 Mes transactions</h2>
+
+  <!-- Chargement -->
+  <div *ngIf="loading" class="text-center">
+    <mat-spinner></mat-spinner>
+    <p>Chargement des transactions...</p>
+  </div>
+
+  <!-- Erreur -->
+  <div *ngIf="error && !loading" class="alert alert-danger">
+    ❌ {{ error }}
+  </div>
+
+  <!-- Liste des transactions -->
+  <div *ngIf="!loading && transactions.length > 0" class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Commerçant</th>
+          <th>Montant</th>
+          <th>Date</th>
+          <th>Catégorie</th>
+          <th>Type</th>
+          <th>Carte</th>
+          <th>Source</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tx of transactions" [class.table-danger]="tx.type === 'DEPENSE'">
+          <!-- Commerçant -->
+          <td>
+            <strong>{{ tx.merchantName || tx.description }}</strong>
+          </td>
+
+          <!-- Montant -->
+          <td>
+            <span [class.text-danger]="tx.type === 'DEPENSE'">
+              {{ tx.type === 'DEPENSE' ? '-' : '+' }} {{ tx.amount }}€
+            </span>
+          </td>
+
+          <!-- Date -->
+          <td>{{ formatDate(tx.date) }}</td>
+
+          <!-- Catégorie (modifiable) -->
+          <td>
+            <select class="form-select form-select-sm"
+                    [value]="tx.category"
+                    (change)="updateCategory(tx.id, $event.target.value)">
+              <option *ngFor="let cat of categories" [value]="cat">
+                {{ cat }}
+              </option>
+            </select>
+          </td>
+
+          <!-- Type -->
+          <td>
+            <span class="badge" [ngClass]="tx.type === 'DEPENSE' ? 'bg-danger' : 'bg-success'">
+              {{ tx.type }}
+            </span>
+          </td>
+
+          <!-- Carte -->
+          <td>
+            <span *ngIf="tx.cardLast4" class="badge bg-secondary">
+              ****{{ tx.cardLast4 }}
+            </span>
+            <span *ngIf="!tx.cardLast4" class="text-muted">-</span>
+          </td>
+
+          <!-- Source -->
+          <td>
+            <small class="text-muted">{{ tx.source || 'MANUAL_ENTRY' }}</small>
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <button class="btn btn-sm btn-danger"
+                    (click)="deleteTransaction(tx.id)"
+                    title="Supprimer">
+              🗑️
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Aucune transaction -->
+  <div *ngIf="!loading && transactions.length === 0" class="alert alert-info">
+    ℹ️ Aucune transaction pour l'instant. Enregistrez votre premier paiement!
+  </div>
+</div>
+
+<style>
+  .transactions-container {
+    padding: 20px;
+  }
+
+  .table-responsive {
+    margin-top: 20px;
+  }
+
+  .form-select-sm {
+    padding: 4px 8px;
+    font-size: 0.875rem;
+  }
+
+  .badge {
+    padding: 6px 12px;
+  }
+
+  .text-danger {
+    color: #dc3545;
+  }
+
+  .text-success {
+    color: #28a745;
+  }
+
+  .alert {
+    margin-bottom: 0;
+  }
+</style>
+

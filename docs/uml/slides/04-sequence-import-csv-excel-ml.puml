@@ -1,0 +1,19 @@
+@startuml
+title Import CSV/Excel + ML - Vue simplifiee
+
+skinparam shadowing false
+actor "Utilisateur" as User
+participant "Angular" as Front
+participant "API Spring Boot" as API
+participant "FastAPI ML" as ML
+database "PostgreSQL" as DB
+
+User -> Front : Importer fichier
+Front -> API : POST /api/transactions/import
+API -> API : Lire CSV/Excel
+API -> ML : POST /predict
+ML --> API : Categorie + confiance
+API -> DB : Enregistrer transactions
+API --> Front : Resume import
+Front --> User : Resultat
+@enduml

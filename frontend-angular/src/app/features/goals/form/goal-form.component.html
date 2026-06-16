@@ -1,0 +1,110 @@
+<section class="goal-form-page">
+  <header class="form-hero">
+    <div class="hero-copy">
+      <a routerLink="/goals" class="back-link">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>Retour aux objectifs</span>
+      </a>
+
+      <span class="hero-kicker">Objectifs financiers</span>
+      <h1>{{ pageTitle() }}</h1>
+      <p>{{ pageSubtitle() }}</p>
+    </div>
+  </header>
+
+  <section class="form-layout">
+    <article class="form-panel">
+      <div class="panel-head">
+        <h2>Parametres de l objectif</h2>
+        <p>Renseignez votre cap, votre niveau actuel et l horizon que vous visez.</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="goal-form">
+        <div class="field-grid">
+          <div class="field field-full" [class.field-error]="getError('name')">
+            <label for="goal-name">Titre de l objectif</label>
+            <input
+              id="goal-name"
+              type="text"
+              formControlName="name"
+              placeholder="Ex: Fonds d urgence, Voyage, Achat important" />
+            @if (getError('name')) {
+              <p class="field-error-message">{{ getError('name') }}</p>
+            }
+          </div>
+
+          <div class="field field-full" [class.field-error]="getError('description')">
+            <label for="goal-description">Description</label>
+            <textarea
+              id="goal-description"
+              rows="4"
+              formControlName="description"
+              placeholder="Decrivez l utilite de cet objectif et ce qu il represente pour vous."></textarea>
+            @if (getError('description')) {
+              <p class="field-error-message">{{ getError('description') }}</p>
+            }
+          </div>
+
+          <div class="field" [class.field-error]="getError('targetAmount')">
+            <label for="goal-target">Montant cible</label>
+            <input
+              id="goal-target"
+              type="number"
+              min="1"
+              step="10"
+              formControlName="targetAmount"
+              placeholder="0" />
+            @if (getError('targetAmount')) {
+              <p class="field-error-message">{{ getError('targetAmount') }}</p>
+            }
+          </div>
+
+          <div class="field" [class.field-error]="getError('currentAmount')">
+            <label for="goal-current">Montant actuel</label>
+            <input
+              id="goal-current"
+              type="number"
+              min="0"
+              step="10"
+              formControlName="currentAmount"
+              placeholder="0" />
+            @if (getError('currentAmount')) {
+              <p class="field-error-message">{{ getError('currentAmount') }}</p>
+            } @else if (currentAmountHelper()) {
+              <p class="field-helper">{{ currentAmountHelper() }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="goal-type">Type d objectif</label>
+            <select id="goal-type" formControlName="type">
+              @for (option of goalTypeOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            <p class="field-helper">{{ selectedGoalTypeDescription() }}</p>
+          </div>
+
+          <div class="field" [class.field-error]="getError('targetDate')">
+            <label for="goal-date">Date cible</label>
+            <input id="goal-date" type="date" formControlName="targetDate" />
+            @if (getError('targetDate')) {
+              <p class="field-error-message">{{ getError('targetDate') }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <a routerLink="/goals" class="ghost-btn">Annuler</a>
+          <button type="submit" class="primary-btn" [disabled]="isLoading()">
+            @if (isLoading()) {
+              <span class="spinner"></span>
+            }
+            <span>{{ submitLabel() }}</span>
+          </button>
+        </div>
+      </form>
+    </article>
+
+  </section>
+</section>

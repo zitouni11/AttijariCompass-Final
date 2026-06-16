@@ -1,0 +1,40 @@
+<div class="modal-overlay" (click)="closeFromBackdrop($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="card-entry-options-title">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">Ajout de carte</span>
+        <h2 id="card-entry-options-title">Ajouter une carte</h2>
+        <p>Choisissez le point d entree le plus adapte pour alimenter votre espace cartes sandbox.</p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close()" aria-label="Fermer">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </header>
+
+    <div class="options-grid">
+      <button type="button" class="option-card option-card-primary" (click)="chooseGenerate()">
+        <span class="option-icon material-symbols-rounded">add_card</span>
+        <div class="option-copy">
+          <strong>Generer une carte test</strong>
+          <p>Creer une nouvelle carte sandbox Attijari avec un profil realiste et des transactions pretes a analyser.</p>
+        </div>
+        <span class="option-cta">Ouvrir la generation</span>
+      </button>
+
+      <button type="button" class="option-card" (click)="chooseExisting()">
+        <span class="option-icon material-symbols-rounded">credit_score</span>
+        <div class="option-copy">
+          <strong>Ajouter une carte existante</strong>
+          <p>Rattacher une carte sandbox deja generee, soit depuis vos cartes memorisees ici, soit via son identifiant.</p>
+        </div>
+
+        @if (pendingCount > 0) {
+          <span class="option-meta">{{ pendingCount }} carte(s) disponible(s) sur cet appareil</span>
+        } @else {
+          <span class="option-meta">Aucune carte memorisee localement pour le moment</span>
+        }
+      </button>
+    </div>
+  </section>
+</div>

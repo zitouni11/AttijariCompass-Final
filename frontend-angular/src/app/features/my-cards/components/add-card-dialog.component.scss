@@ -1,0 +1,26 @@
+:host {
+  display: contents;
+}
+
+.cards-info-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 18px;
+  border: 1px solid rgba(245, 130, 32, 0.16);
+  background: rgba(245, 130, 32, 0.08);
+  color: var(--attijari-text);
+}
+
+.cards-info-note .material-symbols-rounded {
+  color: var(--attijari-orange-dark);
+  font-size: 1.25rem;
+}
+
+.cards-info-note p {
+  margin: 0;
+  color: var(--attijari-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}

@@ -1,0 +1,45 @@
+@startuml
+title Attijari Compass - Synchronisation d'une carte bancaire
+
+skinparam shadowing false
+autonumber
+
+actor "Utilisateur" as User
+participant "Angular\nMes cartes" as Front
+participant "CardService\nAngular" as CardNg
+participant "CardController" as CardCtrl
+participant "CardService\nSpring" as CardSvc
+participant "CardDataProviderFactory" as Factory
+participant "LocalCardDataProvider" as Provider
+participant "CardTransactionSyncService" as SyncSvc
+participant "Repositories" as Repo
+database "PostgreSQL" as DB
+
+User -> Front : Cliquer sur synchroniser
+Front -> CardNg : syncCard(cardId)
+CardNg -> CardCtrl : POST /api/cards/{cardId}/sync
+CardCtrl -> CardSvc : syncCard(cardId, userEmail)
+
+CardSvc -> Repo : verifier carte utilisateur
+Repo -> DB : SELECT user_card
+DB --> Repo : carte valide
+Repo --> CardSvc : UserCard
+
+CardSvc -> Factory : selectionner provider
+Factory --> CardSvc : LocalCardDataProvider
+CardSvc -> Provider : lire operations carte
+Provider -> DB : SELECT donnees locales carte
+DB --> Provider : operations source
+Provider --> CardSvc : liste operations
+
+CardSvc -> SyncSvc : synchroniser operations
+SyncSvc -> Repo : sauvegarder CardTransaction
+Repo -> DB : INSERT/UPDATE card_transaction
+SyncSvc -> Repo : creer transactions financieres liees
+Repo -> DB : INSERT transaction
+
+CardSvc --> CardCtrl : CardSyncResponse
+CardCtrl --> CardNg : 200 OK
+CardNg --> Front : rafraichir la vue
+Front --> User : Synchronisation terminee
+@enduml

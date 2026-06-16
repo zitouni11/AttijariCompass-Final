@@ -1,0 +1,117 @@
+<!-- ✅ À COPIER DANS: src/app/components/login/login.component.html -->
+
+<div class="login-container">
+  <div class="login-card">
+    <h2 class="text-center mb-4">🏦 Attijari Compass</h2>
+    <h4 class="text-center mb-4">Connexion</h4>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+      <!-- Email -->
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input
+          type="email"
+          class="form-control"
+          id="email"
+          formControlName="email"
+          placeholder="exemple@email.com"
+          [class.is-invalid]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid"
+        >
+        <div class="invalid-feedback" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+          Email valide requis
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-3">
+        <label for="password" class="form-label">Mot de passe</label>
+        <input
+          type="password"
+          class="form-control"
+          id="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
+        >
+        <div class="invalid-feedback" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+          Mot de passe requis (min. 6 caractères)
+        </div>
+      </div>
+
+      <!-- Erreur -->
+      <div *ngIf="error" class="alert alert-danger" role="alert">
+        ❌ {{ error }}
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn btn-primary w-100"
+        [disabled]="!loginForm.valid || loading"
+      >
+        <span *ngIf="!loading">Connexion</span>
+        <span *ngIf="loading">
+          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+          Connexion en cours...
+        </span>
+      </button>
+
+      <!-- Register Link -->
+      <div class="text-center mt-3">
+        <p>Pas de compte? <a href="/register">Créer un compte</a></p>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+  }
+
+  h2 {
+    color: #667eea;
+  }
+
+  h4 {
+    color: #333;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  }
+
+  .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  }
+
+  a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
+

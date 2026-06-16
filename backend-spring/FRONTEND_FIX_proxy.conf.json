@@ -1,0 +1,44 @@
+// ✅ ALTERNATIVE: Utiliser un proxy local
+
+// Créer un fichier: proxy.conf.json à la racine du projet Angular
+// Puis modifier angular.json comme ci-dessous
+
+// Contenu de proxy.conf.json:
+{
+  "/api": {
+    "target": "http://localhost:8081",
+    "secure": false,
+    "pathRewrite": {
+      "^/api": "/api"
+    },
+    "changeOrigin": true
+  }
+}
+
+// Puis dans angular.json, dans "serve" options:
+"serve": {
+  "builder": "@angular-devkit/build-angular:dev-server",
+  "options": {
+    "browserTarget": "attijari-compass-frontend:build",
+    "proxyConfig": "proxy.conf.json"  // ← AJOUTER CETTE LIGNE
+  }
+}
+
+// Et dans transaction.service.ts, tu peux alors utiliser:
+// private apiUrl = '/api';  // Au lieu de l'URL complète
+
+// OU (recommandé) tu peux encore utiliser environment.apiUrl mais comme '/api'
+
+// Avantages du proxy:
+// ✅ Pas de CORS issues
+// ✅ Pas d'exposer l'URL du backend en prod
+// ✅ Plus sécurisé
+
+// Désavantages:
+// ❌ Ne marche qu'en développement (ng serve)
+// ❌ Faut un vrai reverse proxy en production
+
+// RECOMMANDATION:
+// Utilise environment.apiUrl = 'http://localhost:8081/api' en DEV
+// Et en PROD, fais un vrai reverse proxy (nginx, Apache)
+

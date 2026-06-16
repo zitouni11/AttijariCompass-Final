@@ -1,0 +1,414 @@
+<div class="dashboard-shell">
+  <section class="dashboard-hero dashboard-hero-bleed">
+    <div class="dashboard-hero-noise"></div>
+    <div class="dashboard-hero-glow"></div>
+    <div class="dashboard-hero-glow-secondary"></div>
+
+    <div class="dashboard-hero-copy dashboard-hero-copy-centered">
+      <span class="dashboard-kicker dashboard-kicker-live">
+        <span class="dashboard-kicker-dot"></span>
+        <span>Attijari Compass · Votre banque intelligente</span>
+      </span>
+      <h1>
+        Pilotez vos finances
+        <span>avec <em>intelligence.</em></span>
+      </h1>
+      <p class="dashboard-welcome-message">{{ welcomeMessage() }}</p>
+      <p>{{ heroSubtitle() }}</p>
+
+      <div class="dashboard-hero-cards">
+        @for (item of heroCards(); track item.label) {
+          <article class="dashboard-hero-card" [attr.data-tone]="item.tone || 'default'">
+            <span class="dashboard-hero-card-icon material-symbols-rounded">{{ item.icon }}</span>
+            <strong>{{ item.value }}</strong>
+            <small>{{ item.label }}</small>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="dashboard-ticker dashboard-ticker-bleed" aria-label="Highlights">
+    <div class="dashboard-ticker-track">
+      @for (item of marqueeItems; track item) {
+        <span class="dashboard-ticker-item">✦ <span>{{ item }}</span></span>
+        <span class="dashboard-ticker-separator">·</span>
+      }
+      @for (item of marqueeItems; track 'dup-' + item) {
+        <span class="dashboard-ticker-item">✦ <span>{{ item }}</span></span>
+        <span class="dashboard-ticker-separator">·</span>
+      }
+    </div>
+  </section>
+
+  @if (errorMessage() && summary()) {
+    <section class="dashboard-feedback dashboard-feedback-warning">
+      <span class="material-symbols-rounded">warning</span>
+      <div>
+        <strong>La derniere lecture fiable est conservee</strong>
+        <p>{{ errorMessage() }}</p>
+      </div>
+    </section>
+  }
+
+  @if (loading() && !summary()) {
+    <section class="dashboard-skeleton-grid dashboard-skeleton-grid-overview">
+      @for (item of [1, 2, 3, 4, 5]; track item) {
+        <div class="dashboard-skeleton-card"></div>
+      }
+    </section>
+
+    <section class="dashboard-skeleton-panels">
+      <div class="dashboard-skeleton-panel"></div>
+      <div class="dashboard-skeleton-panel"></div>
+    </section>
+  } @else if (errorMessage() && !summary()) {
+    <section class="dashboard-feedback dashboard-feedback-danger">
+      <span class="material-symbols-rounded">error</span>
+      <div>
+        <strong>Votre espace ne peut pas etre charge pour le moment</strong>
+        <p>{{ errorMessage() }}</p>
+      </div>
+      <button type="button" class="dashboard-secondary-btn" (click)="refresh()">Reessayer</button>
+    </section>
+  } @else {
+    @if (summary(); as vm) {
+      @if (!hasRenderableData(vm)) {
+        <section class="dashboard-empty-state">
+          <div class="dashboard-empty-visual">
+            <span class="material-symbols-rounded">finance_mode</span>
+          </div>
+          <div>
+            <h2>Votre espace est pret a construire une lecture plus intelligente</h2>
+            <p>Nous n avons pas encore assez de donnees pour raconter votre mois. Ajoutez des transactions, importez un fichier ou connectez une carte pour lancer l experience premium.</p>
+          </div>
+          <div class="dashboard-empty-actions">
+            <a routerLink="/transactions/new" class="dashboard-primary-btn">Ajouter une transaction</a>
+            <a routerLink="/my-cards" class="dashboard-secondary-btn">Connecter mes cartes</a>
+          </div>
+        </section>
+
+        <section class="dashboard-services-section">
+          <div class="dashboard-section-head">
+            <div>
+              <span class="dashboard-kicker">Services</span>
+              <h2>Les briques clefs de votre espace financier</h2>
+              <p>Chaque module fonctionne deja, et prendra davantage de valeur des que vos donnees seront enrichies.</p>
+            </div>
+          </div>
+
+          <div class="dashboard-services-grid">
+            @for (service of serviceCards; track service.title) {
+              <a class="dashboard-service-card" [routerLink]="service.route">
+                <span class="material-symbols-rounded">{{ service.icon }}</span>
+                <strong>{{ service.title }}</strong>
+                <p>{{ service.description }}</p>
+                <span class="dashboard-service-link">{{ service.cta }}</span>
+              </a>
+            }
+          </div>
+        </section>
+      } @else {
+        <section class="dashboard-overview-section" id="features">
+          <div class="dashboard-section-head">
+            <div>
+              <span class="dashboard-kicker dashboard-kicker-light">Fonctionnalites</span>
+              <h2>Tout ce dont vos finances ont besoin.</h2>
+              <p>Une homepage plus editoriale, plus claire et plus proche d une experience bancaire premium que d un dashboard interne.</p>
+            </div>
+          </div>
+
+          <div class="dashboard-overview-grid">
+            @for (card of overviewCards(); track card.title) {
+              <article class="dashboard-overview-card" [attr.data-tone]="card.tone">
+                <div class="dashboard-overview-top">
+                  <span class="dashboard-overview-icon">
+                    <span class="material-symbols-rounded">{{ card.icon }}</span>
+                  </span>
+                  <span class="dashboard-overview-label">{{ card.title }}</span>
+                </div>
+
+                <strong>{{ card.value }}</strong>
+                <p>{{ card.detail }}</p>
+              </article>
+            }
+          </div>
+        </section>
+
+        <section class="dashboard-features-section">
+          <div class="dashboard-section-head">
+            <div>
+              <span class="dashboard-kicker dashboard-kicker-light">Fonctionnalites</span>
+              <h2>Des services utiles, structures comme une vraie plateforme bancaire.</h2>
+              <p>Chaque module conserve sa logique metier actuelle, mais s integre dans un parcours plus premium et plus lisible.</p>
+            </div>
+          </div>
+
+          <div class="dashboard-services-grid dashboard-services-grid-featured">
+            @for (service of serviceCards; track service.title) {
+              <a class="dashboard-service-card dashboard-service-card-featured" [routerLink]="service.route">
+                <span class="dashboard-service-number">{{ service.number }}</span>
+                <span class="material-symbols-rounded">{{ service.icon }}</span>
+                <strong>{{ service.title }}</strong>
+                <p>{{ service.description }}</p>
+                <span class="dashboard-service-link">{{ service.cta }}</span>
+              </a>
+            }
+          </div>
+        </section>
+
+        <section class="dashboard-how-section" id="how">
+          <div class="dashboard-section-head">
+            <div>
+              <span class="dashboard-kicker dashboard-kicker-light">Comment ca marche</span>
+              <h2>Simple. Rapide. Puissant.</h2>
+              <p>Trois etapes suffisent pour transformer votre lecture financiere en experience claire, connectee et pilotable.</p>
+            </div>
+          </div>
+
+          <div class="dashboard-steps-grid">
+            @for (step of steps; track step.number) {
+              <a class="dashboard-step-card" [routerLink]="step.route">
+                <span class="dashboard-step-number">{{ step.number }}</span>
+                <strong>{{ step.title }}</strong>
+                <p>{{ step.description }}</p>
+                <span class="dashboard-step-arrow">→</span>
+              </a>
+            }
+          </div>
+        </section>
+
+        <section class="dashboard-proof-section" id="proof">
+          <div class="dashboard-proof-copy">
+            <span class="dashboard-kicker">Attijari Compass en chiffres</span>
+            <h2>Des reperes qui parlent tout de suite.</h2>
+            <p>Votre dashboard devient une homepage premium avec de vrais signaux utiles, une structure plus credible et une lecture plus institutionnelle.</p>
+            <a routerLink="/transactions" class="dashboard-primary-btn">Explorer mon activite</a>
+          </div>
+
+          <div class="dashboard-proof-grid">
+            @for (item of proofStats(); track item.label) {
+              <article class="dashboard-proof-card">
+                <strong>{{ item.value }}</strong>
+                <span>{{ item.label }}</span>
+              </article>
+            }
+          </div>
+        </section>
+
+        <section class="dashboard-insight-grid">
+          <article class="dashboard-ai-card">
+            <div class="dashboard-section-head">
+              <div>
+                <span class="dashboard-kicker">Analyse intelligente</span>
+                <h2>{{ primaryInsight().title }}</h2>
+                <p>{{ primaryInsight().text }}</p>
+              </div>
+            </div>
+
+            <div class="dashboard-ai-message">
+              <span class="material-symbols-rounded">auto_awesome</span>
+              <div>
+                <strong>Insight principal</strong>
+                <p>{{ primaryInsight().recommendation }}</p>
+              </div>
+            </div>
+
+            <div class="dashboard-ai-recommendation">
+              <span class="dashboard-ai-label">Action recommandee</span>
+              <p>Concentrez-vous sur l action la plus utile pour ce mois avant de multiplier les reglages secondaires.</p>
+            </div>
+
+            <div class="dashboard-insight-actions">
+              <a [routerLink]="primaryInsight().route" class="dashboard-primary-btn">{{ primaryInsight().cta }}</a>
+              <a routerLink="/recommendations" class="dashboard-secondary-btn">Voir recommandations</a>
+            </div>
+          </article>
+
+          <article class="dashboard-side-card">
+            <div class="dashboard-section-head">
+              <div>
+                <span class="dashboard-kicker">Panorama</span>
+                <h2>Categories dominantes</h2>
+                <p>Les categories qui structurent le plus votre mois sont mises en avant ici.</p>
+              </div>
+            </div>
+
+            @if (topCategories().length) {
+              <div class="dashboard-category-stack">
+                @for (category of topCategories(); track trackCategory($index, category)) {
+                  <article class="dashboard-category-card">
+                    <div class="dashboard-category-card-head">
+                      <span
+                        class="dashboard-category-icon-wrap"
+                        [style.background]="categoryBackground(category.category)"
+                        [style.color]="categoryColor(category.category)"
+                      >
+                        <span class="material-symbols-rounded">{{ categoryIcon(category.category) }}</span>
+                      </span>
+                      <div>
+                        <strong>{{ categoryLabel(category.category) }}</strong>
+                        <small>{{ formatPercent(category.share) }} des depenses</small>
+                      </div>
+                    </div>
+
+                    <div class="dashboard-category-bar-wrap">
+                      <span
+                        class="dashboard-category-bar"
+                        [style.width.%]="category.share"
+                        [style.background]="categoryColor(category.category)"
+                      ></span>
+                    </div>
+
+                    <strong class="dashboard-category-amount">{{ formatMoney(category.amount) }}</strong>
+                  </article>
+                }
+              </div>
+            } @else {
+              <div class="dashboard-inline-empty">
+                <span class="material-symbols-rounded">pie_chart</span>
+                <p>Vos categories apparaitront ici des que des depenses seront detectees.</p>
+              </div>
+            }
+
+            <div class="dashboard-health-mini" [attr.data-tone]="healthTone()">
+              <div class="dashboard-health-mini-copy">
+                <strong>{{ healthStatusLabel() }}</strong>
+                <p>{{ healthMessage() }}</p>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="dashboard-services-section">
+          <div class="dashboard-section-head">
+            <div>
+              <span class="dashboard-kicker dashboard-kicker-light">Activite recente</span>
+              <h2>Le fil de vos mouvements, dans une composition plus premium.</h2>
+              <p>Une section claire pour reprendre le fil de vos operations recentes sans retomber dans un tableau de bord technique.</p>
+            </div>
+          </div>
+          <div class="dashboard-activity-headline">
+            <a routerLink="/transactions" class="dashboard-secondary-btn">Voir toutes les transactions</a>
+          </div>
+
+          @if (recentTransactionsError()) {
+            <div class="dashboard-inline-warning">
+              <span class="material-symbols-rounded">info</span>
+              <p>{{ recentTransactionsError() }}</p>
+            </div>
+          }
+
+          @if (recentTransactions().length) {
+            <div class="dashboard-activity-list">
+              @for (transaction of recentTransactions(); track trackTransaction($index, transaction)) {
+                <article class="dashboard-activity-card">
+                  <div class="dashboard-activity-main">
+                    <div
+                      class="dashboard-activity-icon"
+                      [style.background]="categoryBackground(transaction.category)"
+                      [style.color]="categoryColor(transaction.category)"
+                    >
+                      <span class="material-symbols-rounded">{{ categoryIcon(transaction.category) }}</span>
+                    </div>
+
+                    <div class="dashboard-activity-copy">
+                      <div class="dashboard-activity-title-row">
+                        <strong>{{ transaction.description }}</strong>
+                        <span class="dashboard-activity-date">{{ formatTransactionDate(transaction.date) }}</span>
+                      </div>
+
+                      <div class="dashboard-activity-meta">
+                        <span>{{ transaction.merchantName || 'Commercant manuel' }}</span>
+                        <span>{{ categoryLabel(transaction.category) }}</span>
+                        <span>{{ paymentMethodLabel(transaction.paymentMethod) }}</span>
+                        <span>{{ transactionSourceLabel(transaction.source) }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <strong
+                    class="dashboard-activity-amount"
+                    [class.is-negative]="transaction.type === 'DEPENSE'"
+                    [class.is-positive]="transaction.type === 'REVENU'"
+                  >
+                    {{ formatTransactionAmount(transaction) }}
+                  </strong>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="dashboard-inline-empty dashboard-inline-empty-soft">
+              <span class="material-symbols-rounded">schedule</span>
+              <p>Votre activite recente apparaitra ici des les prochaines operations.</p>
+            </div>
+          }
+        </section>
+
+        <section class="dashboard-testimonials-section" id="testimonials">
+          <div class="dashboard-section-head dashboard-section-head-centered">
+            <div>
+              <span class="dashboard-kicker dashboard-kicker-light">Temoignages</span>
+              <h2>Ils ont change leur rapport a l argent.</h2>
+            </div>
+          </div>
+
+          <div class="dashboard-testimonials-grid">
+            @for (item of testimonials; track item.author) {
+              <article class="dashboard-testimonial-card">
+                <span class="dashboard-testimonial-stars">★★★★★</span>
+                <p>{{ item.quote }}</p>
+                <div class="dashboard-testimonial-author">
+                  <span class="dashboard-testimonial-avatar">{{ item.avatar }}</span>
+                  <div>
+                    <strong>{{ item.author }}</strong>
+                    <small>{{ item.role }}</small>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+
+        <section class="dashboard-final-cta" id="pricing">
+          <div class="dashboard-final-cta-copy">
+            <span class="dashboard-kicker">Commencez maintenant</span>
+            <h2>Vos finances meritent mieux qu un tableur.</h2>
+            <p>Retrouvez une experience plus proche d un produit bancaire premium, avec de vraies alertes, de vraies analyses et une lecture beaucoup plus elegante.</p>
+          </div>
+
+          <div class="dashboard-final-cta-actions">
+            <a routerLink="/my-cards" class="dashboard-secondary-btn dashboard-secondary-btn-hero">
+              <span class="material-symbols-rounded">credit_card</span>
+              <span>Connecter mes cartes</span>
+            </a>
+          </div>
+
+          <p class="dashboard-final-cta-note">Sans complexite inutile · Experience guidee · Espace securise</p>
+        </section>
+
+        <footer class="dashboard-footer">
+          <div class="dashboard-footer-brand">
+            <img
+              class="dashboard-footer-logo"
+              src="assets/branding/logo-attijari-icon-transparent.svg"
+              alt="Logo Attijari Compass"
+            />
+            <div>
+              <strong>Attijari Compass</strong>
+              <small>Groupe Attijari · Tunisie</small>
+            </div>
+          </div>
+
+          <div class="dashboard-footer-links">
+            <a routerLink="/dashboard">Accueil</a>
+            <a routerLink="/transactions">Transactions</a>
+            <a routerLink="/budgets">Budgets</a>
+            <a routerLink="/recommendations">Recommandations</a>
+          </div>
+        </footer>
+      }
+    }
+  }
+</div>
+

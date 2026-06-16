@@ -1,0 +1,166 @@
+<div class="notifications-page">
+  <section class="notifications-hero">
+    <div class="notifications-copy">
+      <span class="notifications-kicker">Notifications</span>
+      <h1>Centre d alertes Attijari Compass</h1>
+      <p>
+        Cette vue centralise les notifications reelles de votre espace financier.
+        La cloche, le dropdown et cette page utilisent maintenant la meme source backend pour garder une lecture coherente.
+      </p>
+    </div>
+
+    <div class="notifications-hero-actions">
+      <button type="button" class="btn-secondary" (click)="reload()">Actualiser</button>
+      <a routerLink="/budgets" class="btn-primary">Ouvrir les budgets</a>
+    </div>
+  </section>
+
+  <section class="notifications-summary-grid">
+    <article class="summary-card summary-card-critical">
+      <span class="summary-label">Critiques</span>
+      <strong>{{ criticalCount() }}</strong>
+      <p>Alertes critiques a traiter sans attendre.</p>
+    </article>
+
+    <article class="summary-card summary-card-warning">
+      <span class="summary-label">A surveiller</span>
+      <strong>{{ warningCount() }}</strong>
+      <p>Signals importants qui meritent une attention rapide.</p>
+    </article>
+
+    <article class="summary-card summary-card-info">
+      <span class="summary-label">Informations</span>
+      <strong>{{ infoCount() }}</strong>
+      <p>Notifications de suivi, confirmation ou informations utiles.</p>
+    </article>
+
+    <article class="summary-card summary-card-general">
+      <span class="summary-label">Generales</span>
+      <strong>{{ generalNotificationCount() }}</strong>
+      <p>Messages plateforme publies par Attijari Compass.</p>
+    </article>
+  </section>
+
+  @if (errorMessage()) {
+    <div class="notifications-banner notifications-banner-error">
+      <div>
+        <strong>Chargement incomplet</strong>
+        <p>{{ errorMessage() }}</p>
+      </div>
+      <button type="button" class="btn-secondary" (click)="reload()">Reessayer</button>
+    </div>
+  }
+
+  <section class="notifications-section">
+    <div class="section-heading">
+      <div>
+        <span class="notifications-kicker section-kicker">Plateforme</span>
+        <h2>Notifications generales</h2>
+      </div>
+    </div>
+
+    @if (!hasGeneralNotifications()) {
+      <div class="notifications-empty compact-empty">
+        <span class="material-symbols-rounded">campaign</span>
+        <h2>Aucune notification generale</h2>
+        <p>Les messages de maintenance, securite ou nouvelles fonctionnalites apparaitront ici.</p>
+      </div>
+    } @else {
+      <div class="notifications-list">
+        @for (notification of generalNotificationCards(); track trackGeneralNotification($index, notification)) {
+          <article class="notification-card general-notification-card" [class]="'tone-' + notification.tone">
+            <div class="notification-card-head">
+              <div class="notification-card-copy">
+                <div class="notification-topline">
+                  <span class="notification-severity" [class]="'tone-' + notification.tone">{{ notification.typeLabel }}</span>
+                  <span class="notification-category">Message plateforme</span>
+                </div>
+                <h2>{{ notification.title }}</h2>
+                <p>{{ notification.message }}</p>
+              </div>
+
+              <span class="material-symbols-rounded notification-icon">
+                {{ notification.tone === 'warning' ? 'campaign' : 'info' }}
+              </span>
+            </div>
+
+            <div class="notification-meta">
+              @if (notification.publishedAtLabel) {
+                <span class="notification-pill notification-pill-soft">Publiee {{ notification.publishedAtLabel }}</span>
+              }
+              @if (notification.expiresAtLabel) {
+                <span class="notification-pill notification-pill-soft">Expire {{ notification.expiresAtLabel }}</span>
+              }
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="notifications-section">
+    <div class="section-heading">
+      <div>
+        <span class="notifications-kicker section-kicker">Finances</span>
+        <h2>Alertes financieres</h2>
+      </div>
+    </div>
+
+  @if (loading()) {
+    <section class="notifications-list">
+      @for (item of [1, 2, 3, 4]; track item) {
+        <article class="notification-card notification-card-skeleton"></article>
+      }
+    </section>
+  } @else if (!hasAlerts()) {
+    <section class="notifications-empty">
+      <span class="material-symbols-rounded">notifications_active</span>
+      <h2>Aucune alerte active</h2>
+      <p>Votre centre de notifications est vide pour le moment. Les prochains signaux backend apparaitront ici et dans la cloche.</p>
+      <div class="notifications-empty-actions">
+        <a routerLink="/budgets" class="btn-primary">Retour aux budgets</a>
+        <a routerLink="/transactions" class="btn-secondary">Voir les transactions</a>
+      </div>
+    </section>
+  } @else {
+    <section class="notifications-list">
+      @for (alert of alertCards(); track trackAlert($index, alert)) {
+        <article class="notification-card" [class]="'tone-' + alert.tone">
+          <div class="notification-card-head">
+            <div class="notification-card-copy">
+              <div class="notification-topline">
+                <span class="notification-severity" [class]="'tone-' + alert.tone">{{ alert.severityLabel }}</span>
+                <span class="notification-category">{{ alert.typeLabel }}</span>
+              </div>
+              <h2>{{ alert.title }}</h2>
+              <p>{{ alert.message }}</p>
+            </div>
+
+            <span class="material-symbols-rounded notification-icon">
+              {{
+                alert.tone === 'critical'
+                  ? 'warning'
+                  : alert.tone === 'warning'
+                    ? 'schedule'
+                    : 'verified'
+              }}
+            </span>
+          </div>
+
+          <div class="notification-meta">
+            @if (alert.metricLabel) {
+              <span class="notification-pill">{{ alert.metricLabel }}</span>
+            }
+            @if (alert.generatedAtLabel) {
+              <span class="notification-pill notification-pill-soft">{{ alert.generatedAtLabel }}</span>
+            }
+            @if (alert.actionLabel && alert.actionRoute) {
+              <a [routerLink]="alert.actionRoute" class="notification-pill notification-pill-link">{{ alert.actionLabel }}</a>
+            }
+          </div>
+        </article>
+      }
+    </section>
+  }
+  </section>
+</div>

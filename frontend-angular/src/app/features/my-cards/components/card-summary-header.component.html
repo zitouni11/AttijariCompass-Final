@@ -1,0 +1,59 @@
+<section class="cards-summary-shell">
+  <div class="cards-summary-copy">
+    <div class="cards-section-head">
+      <div>
+        <span class="cards-kicker">Carte liee</span>
+        <h1>{{ resolveCardDisplayName(card) }}</h1>
+        <p>{{ card.cardHolderName }}</p>
+      </div>
+
+      <div class="cards-summary-actions">
+        @if (card.primaryCard) {
+          <span class="cards-soft-pill cards-soft-pill-on-dark">{{ resolvePrimaryCardLabel(card.primaryCard) }}</span>
+        }
+
+        <span
+          class="cards-status-pill cards-status-pill-dark"
+          [class.cards-status-active]="resolveCardStatusTone(card) === 'active'"
+          [class.cards-status-pending]="resolveCardStatusTone(card) === 'pending'"
+          [class.cards-status-blocked]="resolveCardStatusTone(card) === 'blocked' || resolveCardStatusTone(card) === 'inactive'"
+        >
+          {{ resolveCardStatusLabel(card) }}
+        </span>
+
+        <button type="button" class="cards-secondary-btn cards-danger-btn" (click)="requestDisconnect()" [disabled]="deleting">
+          @if (deleting) {
+            <span class="cards-spinner cards-spinner-small"></span>
+          }
+          <span>{{ deleting ? 'Dissociation...' : 'Dissocier la carte' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="cards-summary-grid">
+      <article class="cards-summary-item cards-summary-item-strong">
+        <span>Numero masque</span>
+        <strong>{{ card.maskedCardNumber }}</strong>
+        <small>Lecture securisee visible dans votre espace.</small>
+      </article>
+
+      <article class="cards-summary-item">
+        <span>Titulaire</span>
+        <strong>{{ card.cardHolderName }}</strong>
+        <small>Nom rattache a la carte liee.</small>
+      </article>
+
+      <article class="cards-summary-item">
+        <span>Expiration</span>
+        <strong>{{ formatCardExpiry(card.expiryMonth, card.expiryYear) }}</strong>
+        <small>Validite actuelle de la carte.</small>
+      </article>
+
+      <article class="cards-summary-item">
+        <span>Code carte</span>
+        <strong>{{ card.cardCode || 'Non renseigne' }}</strong>
+        <small>Reference produit utilisee pour la liaison.</small>
+      </article>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,64 @@
+:host {
+  display: block;
+}
+
+.budget-definition-panel,
+.active-budgets-panel {
+  border-radius: 30px;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(243, 111, 33, 0.08), transparent 30%),
+    rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(33, 21, 15, 0.08);
+  box-shadow: 0 24px 70px rgba(33, 21, 15, 0.08);
+}
+
+.budget-definition-panel {
+  display: grid;
+  gap: 22px;
+}
+
+.budget-definition-head {
+  margin-bottom: 0;
+}
+
+.budget-definition-head h2 {
+  margin: 0;
+  color: var(--attijari-black);
+  letter-spacing: -0.04em;
+}
+
+.budget-definition-head p {
+  margin: 0.35rem 0 0;
+  max-width: 62ch;
+  color: var(--attijari-muted);
+  line-height: 1.65;
+}
+
+.budgets-loading-inline {
+  align-items: center;
+}
+
+.budgets-loading-inline .budgets-spinner {
+  color: var(--attijari-orange-dark);
+}
+
+.active-budgets-panel .budgets-metrics-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.active-budgets-panel .budgets-card-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 560px) {
+  .budget-definition-panel,
+  .active-budgets-panel {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .active-budgets-panel .budgets-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}

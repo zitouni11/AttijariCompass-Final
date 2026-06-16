@@ -1,0 +1,113 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/compassbd}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  sql:
+    init:
+      mode: always
+      schema-locations:
+        - classpath:db/migration/V20260404_0001__mes_cartes_domain.sql
+        - classpath:db/migration/V20260404_0002__fix_user_card_columns.sql
+        - classpath:db/migration/V20260404_0003__card_pool_demo_flow.sql
+        - classpath:db/migration/V20260404_0004__fix_user_card_source_type_check.sql
+        - classpath:db/migration/V20260404_0005__card_transaction_amount_signs.sql
+        - classpath:db/migration/V20260410_0001__budget_target_domain.sql
+        - classpath:db/migration/V20260418_0001__transaction_category_taxonomy_refresh.sql
+        - classpath:db/migration/V20260420_0001__expand_transaction_categories.sql
+        - classpath:db/migration/V20260607_0001__admin_back_office.sql
+        - classpath:db/migration/V20260607_0002__user_soft_delete.sql
+        - classpath:db/migration/V20260607_0003__account_restore_requests.sql
+        - classpath:db/migration/V20260613_0001__user_profile_picture.sql
+        - classpath:db/migration/V20260614_0001__adam_card_pool_catalog_demo_cards.sql
+
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  application:
+    name: attijari-compass
+    jackson:
+      serialization:
+        write-dates-as-timestamps: false
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+server:
+  port: ${SERVER_PORT:8082}
+  shutdown: graceful
+  tomcat:
+    connection-timeout: 20000ms
+
+frontend:
+  url: ${FRONTEND_URL:http://127.0.0.1:4200}
+
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration: 86400000
+
+ollama:
+  base-url: http://localhost:11434
+  model: mistral
+
+app:
+  cards:
+    provider: local
+  powerbi:
+    iframe-url: ${APP_POWERBI_IFRAME_URL:https://app.powerbi.com/reportEmbed?reportId=4a43b4c7-5e85-4e5e-8010-4911c77efc76&autoAuth=true&embeddedDemo=true&filterPaneEnabled=false&navContentPaneEnabled=false}
+  categorization:
+    ml:
+      enabled: ${APP_CATEGORIZATION_ML_ENABLED:true}
+      threshold: ${APP_CATEGORIZATION_ML_THRESHOLD:0.65}
+      base-url: ${APP_CATEGORIZATION_ML_BASE_URL:http://localhost:8001}
+
+income:
+  ml:
+    enabled: ${INCOME_ML_ENABLED:true}
+    base-url: ${INCOME_ML_BASE_URL:http://127.0.0.1:8000}
+    threshold: ${INCOME_ML_THRESHOLD:0.6}
+
+groq:
+  api:
+    key: ${GROQ_API_KEY:}
+    url: https://api.groq.com/openai/v1/chat/completions
+    model: openai/gpt-oss-20b
+    advanced-model: openai/gpt-oss-120b
+    temperature: 0.3
+    max-tokens: 900
+    timeout-seconds: 45
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+  packages-to-scan: com.adem.attijari_compass

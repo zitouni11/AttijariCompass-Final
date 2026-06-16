@@ -1,0 +1,164 @@
+<div class="modal-overlay" (click)="closeFromBackdrop($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="add-card-title">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">Generation sandbox</span>
+        <h2 id="add-card-title">Generer une carte test</h2>
+        <p>Generez une carte bancaire sandbox Attijari avec un profil de vie et un volume de transactions adaptes.</p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close()" aria-label="Fermer">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </header>
+
+    <div class="helper-strip">
+      <span class="helper-chip">Generation instantanee</span>
+      <span class="helper-chip">Profils realistes</span>
+      <span class="helper-chip">Aucun debit reel</span>
+    </div>
+
+    @if (!generatedResult) {
+      <form class="modal-form" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="form-grid">
+          <label class="field field-wide">
+            <span class="field-label">Titulaire</span>
+            <input type="text" formControlName="holderName" placeholder="Ex: Zita Test" />
+            @if (getError('holderName'); as error) {
+              <span class="field-error">{{ error }}</span>
+            }
+          </label>
+
+          <label class="field field-wide">
+            <span class="field-label">Profil</span>
+            <select formControlName="profile">
+              @for (profile of profileOptions; track profile.value) {
+                <option [value]="profile.value">{{ profile.label }} - {{ profile.description }}</option>
+              }
+            </select>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Transactions a generer</span>
+            <input type="number" formControlName="transactionCount" min="5" max="200" />
+            @if (getError('transactionCount'); as error) {
+              <span class="field-error">{{ error }}</span>
+            }
+          </label>
+
+          <div class="field field-checkbox">
+            <span class="field-label">Connexion</span>
+            <label class="checkbox-card">
+              <input type="checkbox" formControlName="connectToCurrentUser" />
+              <span class="checkbox-indicator"></span>
+              <span class="checkbox-copy">
+                <strong>Connecter automatiquement a mon compte</strong>
+                <small>La carte sera ajoutee a la page Mes cartes des sa generation.</small>
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <footer class="modal-actions">
+          <button type="button" class="btn-secondary" (click)="close()" [disabled]="loading || connectingToAccount">Annuler</button>
+          <button type="submit" class="btn-primary" [disabled]="loading || connectingToAccount">
+            @if (loading) {
+              <span class="spinner"></span>
+              Generation...
+            } @else {
+              Generer la carte
+            }
+          </button>
+        </footer>
+      </form>
+    } @else {
+      @if (generatedResult; as result) {
+        <section class="success-shell">
+          <article class="success-banner">
+            <span class="material-symbols-rounded">check_circle</span>
+            <div>
+              <strong>{{ result.message }}</strong>
+              <p>
+                @if (result.connectToCurrentUser) {
+                  La carte a ete connectee automatiquement a votre espace et ses flux sont en cours de rafraichissement.
+                } @else {
+                  La carte sandbox a ete generee et reste disponible dans ce recapitulatif.
+                }
+              </p>
+            </div>
+          </article>
+
+          <article class="generated-card-preview">
+            <div class="generated-card-top">
+              <span class="card-chip">{{ result.generatedCard.cardType }}</span>
+              <span class="status-chip">{{ getProfileLabel(result.generatedCard.profile) }}</span>
+            </div>
+
+            <strong>{{ result.generatedCard.maskedCardNumber }}</strong>
+            <p>{{ result.generatedCard.bankName }}</p>
+            <span>{{ result.generatedCard.holderName }}</span>
+          </article>
+
+          @if (!result.connectToCurrentUser) {
+            <div class="generated-summary-grid">
+              <article class="summary-item">
+                <span class="summary-label">Expiration</span>
+                <strong>{{ formatExpiry(result.generatedCard.expiryMonth, result.generatedCard.expiryYear) }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">CVV test</span>
+                <strong>{{ result.generatedCard.cvv }}</strong>
+              </article>
+
+              <article class="summary-item">
+                <span class="summary-label">Profil</span>
+                <strong>{{ getProfileLabel(result.generatedCard.profile) }}</strong>
+              </article>
+
+              <article class="summary-item summary-item-accent">
+                <span class="summary-label">Transactions generees</span>
+                <strong>{{ result.generatedCard.transactionCount }}</strong>
+              </article>
+            </div>
+          }
+
+          @if (connectError) {
+            <article class="action-error">
+              <span class="material-symbols-rounded">error</span>
+              <div>
+                <strong>Connexion au compte impossible</strong>
+                <p>{{ connectError }}</p>
+              </div>
+            </article>
+          }
+
+          <footer class="modal-actions">
+            @if (canConnectGeneratedCard(result)) {
+              <button
+                type="button"
+                class="btn-primary"
+                (click)="requestConnection(result)"
+                [disabled]="loading || connectingToAccount"
+              >
+                @if (connectingToAccount) {
+                  <span class="spinner"></span>
+                  Ajout...
+                } @else {
+                  Ajouter a mon compte
+                }
+              </button>
+            }
+
+            <button type="button" class="btn-ghost" (click)="resetPreview()" [disabled]="loading || connectingToAccount">
+              Generer une autre carte
+            </button>
+            <button type="button" class="btn-secondary" (click)="close()" [disabled]="loading || connectingToAccount">
+              Fermer
+            </button>
+          </footer>
+        </section>
+      }
+    }
+  </section>
+</div>

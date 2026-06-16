@@ -1,0 +1,39 @@
+@startuml
+title Attijari Compass - Import CSV/Excel et categorisation ML
+
+skinparam shadowing false
+autonumber
+
+actor "Utilisateur" as User
+participant "Angular\nTransactions" as Front
+participant "TransactionService\nAngular" as TxNg
+participant "TransactionController" as TxCtrl
+participant "TransactionImportService" as ImportSvc
+participant "SmartCategorizationService" as SmartCat
+participant "MlCategorizationService" as MlClient
+participant "FastAPI ML" as FastAPI
+participant "TransactionRepository" as TxRepo
+database "PostgreSQL" as DB
+
+User -> Front : Choisir fichier CSV/Excel
+Front -> TxNg : importTransactions(file)
+TxNg -> TxCtrl : POST /api/transactions/import
+TxCtrl -> ImportSvc : importTransactions(file, userEmail)
+ImportSvc -> ImportSvc : Lire et valider les lignes
+
+loop Transaction valide
+  ImportSvc -> SmartCat : categoriser(merchant, description)
+  SmartCat -> MlClient : demander prediction
+  MlClient -> FastAPI : POST /predict
+  FastAPI --> MlClient : categorie, confiance, texte normalise
+  MlClient --> SmartCat : resultat ML
+  SmartCat --> ImportSvc : categorie finale
+  ImportSvc -> TxRepo : save(transaction)
+  TxRepo -> DB : INSERT transaction
+end
+
+ImportSvc --> TxCtrl : ImportTransactionsResponse
+TxCtrl --> TxNg : 201 Created
+TxNg --> Front : resume de l'import
+Front --> User : Afficher succes et erreurs
+@enduml

@@ -1,0 +1,45 @@
+<div class="modal-overlay" (click)="closeFromBackdrop($event)">
+  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="disconnect-card-title">
+    <header class="modal-header">
+      <div>
+        <span class="eyebrow">Confirmation securisee</span>
+        <h2 id="disconnect-card-title">Dissocier cette carte</h2>
+        <p>Retirez cette carte sandbox de votre espace Attijari Compass sans toucher aux autres connexions.</p>
+      </div>
+
+      <button type="button" class="close-btn" (click)="close()" aria-label="Fermer">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </header>
+
+    @if (card) {
+      <article class="card-preview">
+        <div class="card-preview-top">
+          <span class="card-chip">{{ card.cardType }}</span>
+          <span class="status-chip">{{ getStatusLabel(card) }}</span>
+        </div>
+
+        <strong>{{ card.maskedCardNumber }}</strong>
+        <p>{{ card.bankName }}</p>
+        <span>{{ card.holderName }}</span>
+      </article>
+    }
+
+    <div class="warning-block">
+      <span class="material-symbols-rounded">warning</span>
+      <p>La carte ne sera plus visible dans cette interface tant qu elle n aura pas ete reconnectee.</p>
+    </div>
+
+    <footer class="modal-actions">
+      <button type="button" class="btn-secondary" (click)="close()" [disabled]="loading">Annuler</button>
+      <button type="button" class="btn-danger" (click)="confirm()" [disabled]="loading">
+        @if (loading) {
+          <span class="spinner"></span>
+          Dissociation...
+        } @else {
+          Dissocier la carte
+        }
+      </button>
+    </footer>
+  </section>
+</div>

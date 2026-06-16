@@ -1,0 +1,223 @@
+<div class="page">
+  <div class="page-header">
+    <a routerLink="/transactions" class="back-link">Retour aux transactions</a>
+    <h1 class="page-title">{{ pageTitle() }}</h1>
+    <p class="page-subtitle">{{ pageSubtitle() }}</p>
+  </div>
+
+  <div class="manual-layout">
+    <form [formGroup]="form" (ngSubmit)="submitManualTransaction()" class="form-card">
+      <div class="section-head">
+        <div>
+          <h2>Informations de la transaction</h2>
+          <p>Renseignez les champs et laissez l'analyse proposer une categorie a corriger si besoin.</p>
+        </div>
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="analyzeCategory()"
+          [disabled]="isPredicting() || !canAnalyze()">
+          @if (isPredicting()) {
+            <span class="spinner"></span>
+            Analyse en cours...
+          } @else {
+            Predire la categorie
+          }
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="merchantName">Commercant</label>
+          <input
+            id="merchantName"
+            type="text"
+            formControlName="merchantName"
+            placeholder="Ex: Carrefour, Hamma Hajem..." />
+        </div>
+
+        <div class="form-group" [class.has-error]="getError('description')">
+          <label for="description">Description *</label>
+          <input
+            id="description"
+            type="text"
+            formControlName="description"
+            placeholder="Ex: Courses semaine, repas midi..." />
+          @if (getError('description')) {
+            <span class="error">{{ getError('description') }}</span>
+          }
+        </div>
+
+        <div class="form-group" [class.has-error]="getError('amount')">
+          <label for="amount">Montant (DT) *</label>
+          <input
+            id="amount"
+            type="number"
+            formControlName="amount"
+            min="0.01"
+            step="0.01"
+            placeholder="0.00" />
+          @if (getError('amount')) {
+            <span class="error">{{ getError('amount') }}</span>
+          }
+        </div>
+
+        <div class="form-group" [class.has-error]="getError('date')">
+          <label for="date">Date *</label>
+          <input id="date" type="date" formControlName="date" />
+          @if (getError('date')) {
+            <span class="error">{{ getError('date') }}</span>
+          }
+        </div>
+
+        <div class="form-group" [class.has-error]="getError('type')">
+          <label for="type">Type *</label>
+          <select id="type" formControlName="type">
+            @for (option of typeOptions; track option.value) {
+              <option [value]="option.value">{{ option.label }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group" [class.has-error]="getError('paymentMethod')">
+          <label for="paymentMethod">Methode</label>
+          <select id="paymentMethod" formControlName="paymentMethod">
+            @for (option of paymentMethodOptions; track option.value) {
+              <option [value]="option.value">{{ option.icon }} {{ option.label }}</option>
+            }
+          </select>
+        </div>
+
+        @if (requiresCardSelection()) {
+          <div class="form-group category-group card-selector-group" [class.has-error]="getError('userCardId')">
+            <label for="userCardId">Carte connectee *</label>
+
+            @if (isLoadingUserCards()) {
+              <div class="card-selector-state">
+                <span class="spinner spinner-dark"></span>
+                Chargement de vos cartes connectees...
+              </div>
+            } @else if (userCardsError()) {
+              <div class="card-selector-state card-selector-state-error">
+                <strong>Cartes indisponibles.</strong>
+                <span>{{ userCardsError() }}</span>
+              </div>
+            } @else if (hasConnectedCards()) {
+              <select id="userCardId" formControlName="userCardId">
+                <option [ngValue]="null">Selectionner une carte connectee</option>
+                @for (card of userCards(); track card.id) {
+                  <option [ngValue]="card.id">{{ cardOptionLabel(card) }}</option>
+                }
+              </select>
+              <small class="hint">Choisissez la carte reliee a cette transaction pour garder un suivi bancaire coherent.</small>
+              @if (getError('userCardId')) {
+                <span class="error">{{ getError('userCardId') }}</span>
+              }
+            } @else {
+              <div class="card-selector-state">
+                <strong>Aucune carte connectee.</strong>
+                <span>Ajoutez d abord une carte dans Mes cartes pour utiliser la methode Carte.</span>
+                <a routerLink="/my-cards" class="inline-link">Ouvrir Mes cartes</a>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="form-group category-group" [class.has-error]="getError('category')">
+          <label for="category">Categorie *</label>
+          <select id="category" formControlName="category">
+            <option value="">Selectionner une categorie</option>
+            @for (category of categories; track category) {
+              <option [value]="category">{{ getCategoryIcon(category) }} {{ getCategoryLabel(category) }}</option>
+            }
+          </select>
+          <small class="hint">Le champ est pre-rempli avec la prediction, mais reste modifiable avant sauvegarde.</small>
+          @if (getError('category')) {
+            <span class="error">{{ getError('category') }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="analysis-inline">
+        <span class="analysis-tip">L'analyse se lance aussi automatiquement apres une courte pause sur le commercant ou la description.</span>
+        @if (predictionError()) {
+          <div class="inline-error">
+            <strong>Service indisponible.</strong>
+            <span>{{ predictionError() }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="form-actions">
+        <a routerLink="/transactions" class="btn-ghost">Annuler</a>
+        <button type="submit" class="btn-primary" [disabled]="isSaving()">
+          @if (isSaving()) {
+            <span class="spinner"></span>
+            Enregistrement...
+          } @else {
+            {{ isEdit() ? 'Mettre a jour la transaction' : 'Enregistrer la transaction' }}
+          }
+        </button>
+      </div>
+    </form>
+
+    <aside class="sidebar-stack">
+      <section class="prediction-card">
+        <div class="prediction-header">
+          <div>
+            <h2>Suggestion IA</h2>
+            <p>Le resultat du backend Spring Boot apparait ici des qu'une analyse reussit.</p>
+          </div>
+        </div>
+
+        @if (categorizationResult(); as result) {
+          <div class="prediction-result">
+            <div class="prediction-row">
+              <span class="meta-label">Categorie proposee</span>
+              <span
+                class="category-badge"
+                [style.background]="getCategoryBackground(resolveCategory(result.category))"
+                [style.color]="getCategoryColor(resolveCategory(result.category))">
+                {{ getCategoryIcon(resolveCategory(result.category)) }} {{ getCategoryLabel(resolveCategory(result.category)) }}
+              </span>
+            </div>
+
+            <div class="prediction-row">
+              <span class="meta-label">Source</span>
+              @if (predictionSourceMeta(); as sourceMeta) {
+                <span
+                  class="source-badge"
+                  [style.background]="sourceMeta.background"
+                  [style.color]="sourceMeta.color"
+                  [style.borderColor]="sourceMeta.border">
+                  {{ sourceMeta.label }}
+                </span>
+              }
+            </div>
+
+            <div class="prediction-grid">
+              <div class="metric">
+                <span class="metric-label">Confiance</span>
+                <strong>{{ formatConfidenceValue(result.confidence) }}</strong>
+              </div>
+              <div class="metric">
+                <span class="metric-label">Texte normalise</span>
+                <strong class="normalized">{{ result.normalizedText || '--' }}</strong>
+              </div>
+            </div>
+
+            <div class="acceptance-note">
+              La categorie du formulaire est deja pre-remplie. Vous pouvez la conserver ou la corriger avant sauvegarde.
+            </div>
+          </div>
+        } @else {
+          <div class="empty-prediction">
+            <div class="empty-illustration">AI</div>
+            <h3>Aucune suggestion pour l'instant</h3>
+            <p>Ajoutez un commercant et une description, puis lancez l'analyse pour afficher la proposition de categorie.</p>
+          </div>
+        }
+      </section>
+    </aside>
+  </div>
+</div>

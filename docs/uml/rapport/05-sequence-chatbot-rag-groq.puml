@@ -1,0 +1,38 @@
+@startuml
+title Attijari Compass - Chatbot financier RAG avec Groq
+
+skinparam shadowing false
+autonumber
+
+actor "Utilisateur" as User
+participant "Angular\nChatComponent" as Front
+participant "ChatbotService\nAngular" as ChatNg
+participant "ChatController" as ChatCtrl
+participant "ChatService" as ChatSvc
+participant "RagService" as Rag
+participant "Services metier" as Domain
+participant "GroqService" as GroqSvc
+participant "Groq API" as Groq
+database "PostgreSQL" as DB
+
+User -> Front : Poser une question
+Front -> ChatNg : sendMessage(message)
+ChatNg -> ChatCtrl : POST /api/chat + JWT
+ChatCtrl -> ChatSvc : chat(userId, message)
+
+ChatSvc -> Rag : buildAdaptiveContext(userId, message)
+Rag -> Domain : collecter contexte financier
+Domain -> DB : Lire transactions, rapports,\nbudgets et objectifs
+DB --> Domain : donnees utilisateur
+Domain --> Rag : contexte metier
+Rag --> ChatSvc : contexte RAG
+
+ChatSvc -> GroqSvc : askWithMetadata(prompt, contexte)
+GroqSvc -> Groq : Chat completion
+Groq --> GroqSvc : reponse LLM
+GroqSvc --> ChatSvc : reponse finale
+ChatSvc --> ChatCtrl : ChatResponseDto
+ChatCtrl --> ChatNg : 200 OK
+ChatNg --> Front : reponse IA
+Front --> User : Afficher la reponse
+@enduml

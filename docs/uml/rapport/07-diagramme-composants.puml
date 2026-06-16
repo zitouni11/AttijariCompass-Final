@@ -1,0 +1,47 @@
+@startuml
+title Attijari Compass - Diagramme de composants
+
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+package "Frontend Angular" {
+  component "Modules fonctionnels\nAuth, Dashboard, Transactions,\nCartes, Budgets, Objectifs" as NgModules
+  component "Services Angular" as NgServices
+  component "Guards et Interceptors JWT" as NgSecurity
+}
+
+package "Backend Spring Boot" {
+  component "Controllers REST" as Controllers
+  component "Security JWT" as Security
+  component "Services metier" as Services
+  component "Repositories JPA" as Repos
+  component "Client ML" as MlClient
+  component "Chatbot RAG" as RagComp
+}
+
+package "IA / ML" {
+  component "FastAPI ML\nCategorisation" as FastAPI
+  component "Groq API\nLLM" as Groq
+  component "Ollama local\noptionnel" as Ollama
+}
+
+database "PostgreSQL" as DB
+
+NgModules --> NgServices
+NgServices --> NgSecurity
+NgSecurity --> Controllers : HTTP REST + JWT
+
+Controllers --> Security
+Controllers --> Services
+Services --> Repos
+Repos --> DB
+
+Services --> MlClient
+MlClient --> FastAPI : /predict
+
+Controllers --> RagComp
+RagComp --> Services : contexte financier
+RagComp --> Groq : prompt + contexte
+RagComp --> Ollama : optionnel
+@enduml
