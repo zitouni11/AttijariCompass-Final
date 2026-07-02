@@ -18,10 +18,6 @@ spring:
         - classpath:db/migration/V20260418_0001__transaction_category_taxonomy_refresh.sql
         - classpath:db/migration/V20260420_0001__expand_transaction_categories.sql
         - classpath:db/migration/V20260607_0001__admin_back_office.sql
-        - classpath:db/migration/V20260607_0002__user_soft_delete.sql
-        - classpath:db/migration/V20260607_0003__account_restore_requests.sql
-        - classpath:db/migration/V20260613_0001__user_profile_picture.sql
-        - classpath:db/migration/V20260614_0001__adam_card_pool_catalog_demo_cards.sql
 
   jpa:
     defer-datasource-initialization: true
@@ -66,9 +62,6 @@ server:
   tomcat:
     connection-timeout: 20000ms
 
-frontend:
-  url: ${FRONTEND_URL:http://127.0.0.1:4200}
-
 jwt:
   secret: ${JWT_SECRET:}
   expiration: 86400000
@@ -80,8 +73,6 @@ ollama:
 app:
   cards:
     provider: local
-  powerbi:
-    iframe-url: ${APP_POWERBI_IFRAME_URL:https://app.powerbi.com/reportEmbed?reportId=4a43b4c7-5e85-4e5e-8010-4911c77efc76&autoAuth=true&embeddedDemo=true&filterPaneEnabled=false&navContentPaneEnabled=false}
   categorization:
     ml:
       enabled: ${APP_CATEGORIZATION_ML_ENABLED:true}

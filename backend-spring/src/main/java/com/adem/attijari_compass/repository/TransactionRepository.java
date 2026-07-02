@@ -23,6 +23,17 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     long countBySourceIn(List<TransactionSource> sources);
 
+    @Query(value = """
+            SELECT COALESCE(t.payment_method, 'UNKNOWN') AS source,
+                   COUNT(t.id) AS transaction_count,
+                   COALESCE(SUM(ABS(COALESCE(t.amount, 0))), 0) AS total_amount
+            FROM "transaction" t
+            JOIN app_user u ON u.id = t.user_id
+            WHERE u.role IN ('USER', 'ADMIN')
+            GROUP BY COALESCE(t.payment_method, 'UNKNOWN')
+            """, nativeQuery = true)
+    List<Object[]> findPowerBiTransactionSourceMetrics();
+
     @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.user WHERE t.user.id = :userId ORDER BY t.date DESC")
     List<Transaction> findAllByUserId(@Param("userId") Long userId);
 

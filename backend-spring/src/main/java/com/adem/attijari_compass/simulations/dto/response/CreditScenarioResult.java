@@ -21,4 +21,5 @@ public class CreditScenarioResult {
     private BigDecimal totalCost;
     private BigDecimal totalInterest;
     private LocalDate endDate;
+    private CreditEligibilityResponse eligibility;
 }

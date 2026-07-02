@@ -32,6 +32,7 @@ export interface CreditApiPayloadFields {
   durationMonths: number;
   annualInterestRate: number;
   monthlyIncome: number;
+  existingMonthlyCharges: number;
   earlyRepaymentAmount: number;
   earlyRepaymentMonth: number;
 }
@@ -86,6 +87,16 @@ export interface CreditApiScenarioDto {
   totalCost?: number;
   totalInterest?: number;
   debtRatio?: number;
+  eligibility?: {
+    status?: 'ELIGIBLE' | 'WATCH' | 'NOT_ELIGIBLE';
+    realRepaymentCapacity?: number;
+    debtRatio?: number;
+    maximumRecommendedAmount?: number;
+    message?: string;
+    recommended?: boolean;
+    recommendedDurationMonths?: number;
+    recommendedChargeReduction?: number;
+  };
   endDate?: string;
   maturityDate?: string;
   principal?: number;

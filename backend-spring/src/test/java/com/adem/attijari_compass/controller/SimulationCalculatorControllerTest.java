@@ -105,6 +105,8 @@ class SimulationCalculatorControllerTest {
                                 .downPayment(BigDecimal.valueOf(30_000))
                                 .annualInterestRate(BigDecimal.valueOf(7.1))
                                 .durationMonths(84)
+                                .monthlyIncome(BigDecimal.valueOf(6_200))
+                                .existingMonthlyCharges(BigDecimal.ZERO)
                                 .build())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.financedAmount").value(190000))

@@ -127,6 +127,7 @@ export const normalizeCreditFormValue = (
     interestRate: toSafeNumber(value?.interestRate, 7.1, 0, 30),
     durationMonths,
     monthlyIncome: toSafeNumber(value?.monthlyIncome, 6000, 0, 1_000_000),
+    existingMonthlyCharges: toSafeNumber(value?.existingMonthlyCharges, 0, 0, 1_000_000),
     earlyRepaymentAmount: toSafeNumber(value?.earlyRepaymentAmount, 0, 0, creditAmount),
     earlyRepaymentMonth: Math.round(toSafeNumber(value?.earlyRepaymentMonth, Math.min(24, durationMonths), 1, durationMonths))
   };
@@ -445,6 +446,25 @@ const createCreditScenario = (
   const totalInterest = roundCurrency(lastPoint.cumulativeInterest);
   const totalCost = roundCurrency(totalRepayment + form.downPayment);
   const debtRatio = form.monthlyIncome > 0 ? roundCurrency((monthlyPayment / form.monthlyIncome) * 100) : null;
+  const realRepaymentCapacity = roundCurrency(Math.max(0, form.monthlyIncome * 0.4 - form.existingMonthlyCharges));
+  const maximumFinancedAmount = monthlyRate === 0
+    ? realRepaymentCapacity * form.durationMonths
+    : realRepaymentCapacity * (1 - Math.pow(1 + monthlyRate, -form.durationMonths)) / monthlyRate;
+  const maximumRecommendedAmount = roundCurrency(Math.max(0, maximumFinancedAmount + form.downPayment));
+  const eligibilityStatus =
+    form.monthlyIncome <= 0 || realRepaymentCapacity <= 0
+      ? 'NOT_ELIGIBLE'
+      : debtRatio !== null && debtRatio <= 40
+        ? 'ELIGIBLE'
+        : debtRatio !== null && debtRatio <= 50
+          ? 'WATCH'
+          : 'NOT_ELIGIBLE';
+  const eligibilityMessage =
+    eligibilityStatus === 'ELIGIBLE'
+      ? 'Votre demande semble compatible avec votre capacité de remboursement.'
+      : eligibilityStatus === 'WATCH'
+        ? 'Votre demande est proche de la limite recommandée. Une réduction du montant est conseillée.'
+        : 'Votre demande dépasse votre capacité estimée. Ce crédit risque d’être refusé.';
   const earlyRepayment = adjustedSchedule.appliedExtraRepaymentAmount > 0
     ? {
         month: normalizedEarlyRepaymentMonth,
@@ -467,6 +487,16 @@ const createCreditScenario = (
     totalCost,
     totalInterest,
     debtRatio,
+    eligibility: {
+      status: eligibilityStatus,
+      realRepaymentCapacity,
+      debtRatio: debtRatio ?? 100,
+      maximumRecommendedAmount,
+      message: eligibilityMessage,
+      recommended: eligibilityStatus === 'ELIGIBLE',
+      recommendedDurationMonths: null,
+      recommendedChargeReduction: 0
+    },
     endDate: lastPoint.date,
     points,
     milestones: buildCreditMilestones(principal, points),

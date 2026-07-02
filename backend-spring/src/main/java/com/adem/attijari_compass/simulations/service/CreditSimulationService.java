@@ -6,9 +6,11 @@ import com.adem.attijari_compass.simulations.dto.request.CreditScenarioRequest;
 import com.adem.attijari_compass.simulations.dto.response.AmortizationPreviewItemResponse;
 import com.adem.attijari_compass.simulations.dto.response.CreditCalculateResponse;
 import com.adem.attijari_compass.simulations.dto.response.CreditCompareResponse;
+import com.adem.attijari_compass.simulations.dto.response.CreditEligibilityResponse;
 import com.adem.attijari_compass.simulations.dto.response.CreditScenarioResult;
 import com.adem.attijari_compass.simulations.dto.response.EarlyRepaymentImpactResponse;
 import com.adem.attijari_compass.simulations.util.SimulationMathUtils;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -17,9 +19,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CreditSimulationService {
 
     private static final int PREVIEW_INSTALLMENT_COUNT = 12;
+    private final CreditEligibilityService creditEligibilityService;
 
     public CreditCalculateResponse calculate(CreditCalculateRequest request) {
         CreditSnapshot snapshot = calculateSnapshot(request);
@@ -31,6 +35,7 @@ public class CreditSimulationService {
                 .endDate(snapshot.endDate())
                 .amortizationPreview(snapshot.amortizationPreview())
                 .earlyRepaymentImpact(snapshot.earlyRepaymentImpact())
+                .eligibility(snapshot.eligibility())
                 .build();
     }
 
@@ -51,6 +56,7 @@ public class CreditSimulationService {
                 .annualInterestRate(request.getAnnualInterestRate())
                 .durationMonths(request.getDurationMonths())
                 .monthlyIncome(request.getMonthlyIncome())
+                .existingMonthlyCharges(request.getExistingMonthlyCharges())
                 .earlyRepaymentAmount(request.getEarlyRepaymentAmount())
                 .earlyRepaymentMonth(request.getEarlyRepaymentMonth())
                 .build());
@@ -62,6 +68,7 @@ public class CreditSimulationService {
                 .totalCost(snapshot.totalCost())
                 .totalInterest(snapshot.totalInterest())
                 .endDate(snapshot.endDate())
+                .eligibility(snapshot.eligibility())
                 .build();
     }
 
@@ -101,6 +108,11 @@ public class CreditSimulationService {
         BigDecimal scenarioTotalInterest = totalInterest(scenarioSchedule);
         BigDecimal scenarioInstallmentCost = totalPayment(scenarioSchedule);
         LocalDate endDate = scenarioSchedule.isEmpty() ? startDate : scenarioSchedule.getLast().paymentDate();
+        CreditEligibilityResponse eligibility = creditEligibilityService.analyze(
+                request,
+                downPayment,
+                monthlyPayment
+        );
 
         return new CreditSnapshot(
                 financedAmount,
@@ -116,7 +128,8 @@ public class CreditSimulationService {
                         scenarioSchedule,
                         baselineTotalInterest,
                         scenarioTotalInterest
-                )
+                ),
+                eligibility
         );
     }
 
@@ -130,11 +143,11 @@ public class CreditSimulationService {
         boolean hasEarlyAmount = request.getEarlyRepaymentAmount() != null
                 && request.getEarlyRepaymentAmount().compareTo(BigDecimal.ZERO) > 0;
         boolean hasEarlyMonth = request.getEarlyRepaymentMonth() != null;
-        if (hasEarlyAmount != hasEarlyMonth) {
+        if (hasEarlyAmount && !hasEarlyMonth) {
             throw new IllegalArgumentException("earlyRepaymentAmount and earlyRepaymentMonth must be provided together");
         }
 
-        if (hasEarlyMonth && request.getEarlyRepaymentMonth() > request.getDurationMonths()) {
+        if (hasEarlyAmount && request.getEarlyRepaymentMonth() > request.getDurationMonths()) {
             throw new IllegalArgumentException("earlyRepaymentMonth cannot exceed durationMonths");
         }
     }
@@ -281,7 +294,8 @@ public class CreditSimulationService {
             BigDecimal totalInterest,
             LocalDate endDate,
             List<AmortizationPreviewItemResponse> amortizationPreview,
-            EarlyRepaymentImpactResponse earlyRepaymentImpact
+            EarlyRepaymentImpactResponse earlyRepaymentImpact,
+            CreditEligibilityResponse eligibility
     ) {
     }
 }

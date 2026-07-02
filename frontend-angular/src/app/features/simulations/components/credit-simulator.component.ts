@@ -2,14 +2,11 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
-import { catchError, debounceTime, distinctUntilChanged, forkJoin, map, of, startWith, switchMap } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, map, of, startWith, switchMap } from 'rxjs';
 import { normalizeCreditFormValue, projectCredit } from '../simulations.engine';
-import { formatDuration, formatLongDate, formatMoney, formatMonthLabel, formatPercent } from '../simulations.formatters';
+import { formatDuration, formatLongDate, formatMoney, formatPercent } from '../simulations.formatters';
 import {
-  BuilderHighlight,
-  CompareScenarioCard,
   CreditFormValue,
-  CreditProjectionResult,
   CreditScenarioResult,
   ProjectionMilestone,
   TimelineItem
@@ -29,16 +26,18 @@ type CreditNumericControl =
   | 'interestRate'
   | 'durationMonths'
   | 'monthlyIncome'
+  | 'existingMonthlyCharges'
   | 'earlyRepaymentAmount'
   | 'earlyRepaymentMonth';
 
 const DEFAULT_CREDIT_FORM: CreditFormValue = {
   creditAmount: 220000,
-  downPayment: 30000,
+  downPayment: 0,
   interestRate: 7.1,
   durationMonths: 84,
   monthlyIncome: 6200,
-  earlyRepaymentAmount: 15000,
+  existingMonthlyCharges: 0,
+  earlyRepaymentAmount: 0,
   earlyRepaymentMonth: 24
 };
 
@@ -54,36 +53,95 @@ const DEFAULT_CREDIT_FORM: CreditFormValue = {
       <aside class="input-column">
         <section class="form-card">
           <div class="section-head">
-            <span class="section-kicker">Hypothèse</span>
-            <h3>Simulateur Crédit</h3>
-            <p>Estimez une mensualité, le coût total et la date de fin avec quelques paramètres essentiels.</p>
+            <span class="section-kicker">Simulation bancaire</span>
+            <h3>Paramètres du crédit</h3>
+            <p>Renseignez votre projet et votre situation financière pour obtenir une estimation claire.</p>
           </div>
 
-          <form [formGroup]="form" class="simple-form">
-            <label class="field">
-              <span>Montant du crédit</span>
-              <input type="number" formControlName="creditAmount" min="10000" step="1000" />
-            </label>
+          <form [formGroup]="form" class="credit-form">
+            <fieldset class="form-section-card">
+              <legend><span>1</span> Crédit demandé</legend>
+              <p>Définissez le financement souhaité et ses conditions.</p>
+              <div class="section-fields">
+                <label class="field">
+                  <span>Montant du crédit demandé</span>
+                  <small>Capital que vous souhaitez emprunter.</small>
+                  <div class="input-shell">
+                    <input type="number" formControlName="creditAmount" min="10000" step="1000" placeholder="Ex. 220000" />
+                    <em>DT</em>
+                  </div>
+                </label>
 
-            <label class="field">
-              <span>Durée</span>
-              <input type="number" formControlName="durationMonths" min="12" max="360" step="12" />
-            </label>
+                <label class="field">
+                  <span>Durée en mois</span>
+                  <small>Durée contractuelle en mois.</small>
+                  <div class="input-shell">
+                    <input type="number" formControlName="durationMonths" min="12" max="360" step="12" placeholder="Ex. 84" />
+                    <em>mois</em>
+                  </div>
+                </label>
 
-            <label class="field">
-              <span>Taux d’intérêt</span>
-              <input type="number" formControlName="interestRate" min="0" max="30" step="0.1" />
-            </label>
+                <label class="field field-wide">
+                  <span>Taux d’intérêt annuel</span>
+                  <small>Taux nominal utilisé pour estimer la mensualité.</small>
+                  <div class="input-shell">
+                    <input type="number" formControlName="interestRate" min="0" max="30" step="0.1" placeholder="Ex. 7,1" />
+                    <em>%</em>
+                  </div>
+                </label>
+              </div>
+            </fieldset>
 
-            <label class="field">
-              <span>Capacité de remboursement</span>
-              <input type="number" formControlName="monthlyIncome" min="0" step="100" />
-            </label>
+            <fieldset class="form-section-card">
+              <legend><span>2</span> Situation financière</legend>
+              <p>Ces informations déterminent votre capacité réelle de remboursement.</p>
+              <div class="section-fields">
+                <label class="field">
+                  <span>Revenu mensuel net</span>
+                  <small>Revenu disponible après impôts.</small>
+                  <div class="input-shell">
+                    <input type="number" formControlName="monthlyIncome" min="1" step="100" placeholder="Ex. 6200" />
+                    <em>DT</em>
+                  </div>
+                </label>
 
-            <label class="field field-wide">
-              <span>Remboursement anticipé optionnel</span>
-              <input type="number" formControlName="earlyRepaymentAmount" min="0" step="1000" />
-            </label>
+                <label class="field">
+                  <span>Charges mensuelles existantes</span>
+                  <small>Crédits, loyers et engagements récurrents.</small>
+                  <div class="input-shell">
+                    <input type="number" formControlName="existingMonthlyCharges" min="0" step="100" placeholder="Ex. 800" />
+                    <em>DT</em>
+                  </div>
+                </label>
+
+              </div>
+            </fieldset>
+
+            <fieldset class="form-section-card">
+              <legend><span>3</span> Options</legend>
+              <p>Mesurez l’effet d’un remboursement anticipé éventuel.</p>
+              <div class="section-fields">
+                <label class="field field-wide">
+                  <span>Remboursement anticipé optionnel</span>
+                  <small>Laissez 0 si vous ne prévoyez aucun versement exceptionnel.</small>
+                  <div class="input-shell">
+                    <input type="number" formControlName="earlyRepaymentAmount" min="0" step="1000" placeholder="Ex. 15000" />
+                    <em>DT</em>
+                  </div>
+                </label>
+
+                @if ((form.controls.earlyRepaymentAmount.value ?? 0) > 0) {
+                  <label class="field field-wide">
+                    <span>Mois prévu du remboursement anticipé</span>
+                    <small>La nouvelle durée estimée apparaîtra dans le résultat.</small>
+                    <div class="input-shell">
+                      <input type="number" formControlName="earlyRepaymentMonth" min="1" [max]="currentDuration()" step="1" placeholder="Ex. 24" />
+                      <em>mois</em>
+                    </div>
+                  </label>
+                }
+              </div>
+            </fieldset>
           </form>
 
           @if (form.hasError('downPaymentExceeds')) {
@@ -96,32 +154,133 @@ const DEFAULT_CREDIT_FORM: CreditFormValue = {
           </div>
         </section>
 
-        <article class="help-card">
-          <span class="material-symbols-rounded">help</span>
-          <div>
-            <h3>Comment lire cette simulation ?</h3>
-            <p>Modifiez les montants, lancez la simulation, puis comparez le plan actuel avec un scénario plus rapide. Les résultats sont des estimations destinées à vous aider à décider.</p>
-          </div>
-        </article>
       </aside>
 
       <section class="result-column">
         @if (!hasSimulated()) {
           <article class="empty-card">
-            <span class="material-symbols-rounded">credit_score</span>
-            <h3>Remplissez les champs puis lancez la simulation.</h3>
-            <p>La mensualité estimée, les intérêts et la date de fin apparaîtront ici.</p>
+            <span class="material-symbols-rounded">account_balance</span>
+            <h3>Lancez une simulation pour obtenir votre estimation.</h3>
+            <p>Vous verrez ici la décision estimée, les indicateurs essentiels et une recommandation adaptée.</p>
           </article>
         } @else {
           @if (renderedScenario(); as scenario) {
-            <article class="summary-card">
-              <div class="section-head compact">
-                <span class="section-kicker">Résultat principal</span>
-                <h3>Mensualité estimée : {{ formatMoney(scenario.monthlyPayment) }}</h3>
-                <p>{{ simpleStatusMessage() }}</p>
+            <article
+              class="eligibility-card decision-card"
+              [class.eligibility-card-eligible]="scenario.eligibility.status === 'ELIGIBLE'"
+              [class.eligibility-card-watch]="scenario.eligibility.status === 'WATCH'"
+              [class.eligibility-card-rejected]="scenario.eligibility.status === 'NOT_ELIGIBLE'"
+            >
+              @if (scenario.eligibility.status !== 'ELIGIBLE') {
+                <div class="decision-alert">
+                  <span class="material-symbols-rounded">warning</span>
+                  <strong>{{ simulationAlertLabel(scenario) }}</strong>
+                </div>
+              }
+
+              <div class="eligibility-head">
+                <div>
+                  <span class="section-kicker">Analyse bancaire</span>
+                  <h3>Estimation bancaire indicative</h3>
+                </div>
+                <span class="eligibility-status">{{ eligibilityStatusLabel(scenario.eligibility.status) }}</span>
               </div>
 
-              <div class="summary-primary-grid">
+              <p class="decision-message">{{ scenario.eligibility.message }}</p>
+
+              <div class="decision-facts">
+                <div>
+                  <span>Statut</span>
+                  <strong>{{ eligibilityStatusLabel(scenario.eligibility.status) }}</strong>
+                </div>
+                <div>
+                  <span>Limite recommandée</span>
+                  <strong>40 %</strong>
+                </div>
+                <div>
+                  <span>Capacité réelle</span>
+                  <strong>{{ formatMoney(scenario.eligibility.realRepaymentCapacity) }}</strong>
+                </div>
+                <div>
+                  <span>Montant maximum conseillé</span>
+                  <strong>{{ formatMoney(scenario.eligibility.maximumRecommendedAmount) }}</strong>
+                </div>
+              </div>
+
+              <div class="debt-gauge">
+                <div class="debt-gauge-head">
+                  <div>
+                    <span>Taux d’endettement</span>
+                    <strong>{{ formatPercent(scenario.eligibility.debtRatio) }}</strong>
+                  </div>
+                  <small>Zone recommandée : jusqu’à 40 %</small>
+                </div>
+                <div class="gauge-track">
+                  <span class="gauge-safe"></span>
+                  <span class="gauge-watch"></span>
+                  <span class="gauge-critical"></span>
+                  <i [style.left.%]="debtGaugePosition(scenario)"></i>
+                </div>
+                <div class="gauge-labels">
+                  <span>0 %</span>
+                  <span>40 %</span>
+                  <span>50 %</span>
+                  <span>60 %+</span>
+                </div>
+              </div>
+
+              @if (scenario.eligibility.status !== 'ELIGIBLE') {
+                <section class="recommendation-panel">
+                  <div class="recommendation-title">
+                    <span class="material-symbols-rounded">lightbulb</span>
+                    <div>
+                      <strong>Recommandation automatique</strong>
+                      <small>Une trajectoire plus prudente selon les données saisies.</small>
+                    </div>
+                  </div>
+                  <div class="recommendation-grid">
+                    <div>
+                      <span>Montant demandé</span>
+                      <strong>{{ formatMoney(scenario.form.creditAmount) }}</strong>
+                    </div>
+                    <div>
+                      <span>Montant conseillé</span>
+                      <strong>{{ formatMoney(scenario.eligibility.maximumRecommendedAmount) }}</strong>
+                    </div>
+                    <div>
+                      <span>Réduction recommandée</span>
+                      <strong>{{ formatMoney(recommendedReduction(scenario)) }}</strong>
+                    </div>
+                    <div>
+                      <span>Mensualité cible</span>
+                      <strong>{{ formatMoney(scenario.eligibility.realRepaymentCapacity) }}</strong>
+                    </div>
+                  </div>
+                  <p>{{ recommendationAction(scenario) }}</p>
+                </section>
+              } @else {
+                <section class="positive-recommendation">
+                  <span class="material-symbols-rounded">verified</span>
+                  <p>Vous pouvez poursuivre votre demande auprès de la banque, sous réserve de validation officielle.</p>
+                </section>
+              }
+
+              @if (scenario.earlyRepayment; as earlyRepayment) {
+                <div class="early-result">
+                  <span>Durée estimée après remboursement anticipé</span>
+                  <strong>{{ formatDuration(earlyRepayment.newDurationMonths) }}</strong>
+                </div>
+              }
+
+            </article>
+
+            <article class="summary-card">
+              <div class="section-head compact">
+                <span class="section-kicker">Projection financière</span>
+                <h3>Indicateurs essentiels</h3>
+              </div>
+
+              <div class="essential-metrics">
                 <article class="summary-kpi summary-kpi-primary">
                   <span>Mensualité estimée</span>
                   <strong>{{ formatMoney(scenario.monthlyPayment) }}</strong>
@@ -138,33 +297,24 @@ const DEFAULT_CREDIT_FORM: CreditFormValue = {
                   <span>Date de fin</span>
                   <strong>{{ formatLongDate(scenario.endDate) }}</strong>
                 </article>
+                <article class="summary-kpi">
+                  <span>Taux d’endettement</span>
+                  <strong>{{ formatPercent(scenario.eligibility.debtRatio) }}</strong>
+                </article>
+                <article class="summary-kpi">
+                  <span>Capacité réelle</span>
+                  <strong>{{ formatMoney(scenario.eligibility.realRepaymentCapacity) }}</strong>
+                </article>
+                <article class="summary-kpi">
+                  <span>Montant maximum conseillé</span>
+                  <strong>{{ formatMoney(scenario.eligibility.maximumRecommendedAmount) }}</strong>
+                </article>
               </div>
+
+              <p class="eligibility-note">Cette estimation est indicative et ne remplace pas l’étude officielle de la banque.</p>
             </article>
           }
         }
-
-        <section class="results-zone">
-          <div class="section-head compact">
-            <span class="section-kicker">Comparaison</span>
-            <h3>Scénarios simples</h3>
-          </div>
-
-          <div class="simple-scenarios">
-            @for (scenario of projection().scenarios.slice(0, 3); track scenario.id; let index = $index) {
-              <button
-                type="button"
-                class="scenario-card"
-                [class.is-active]="renderedScenarioId() === scenario.id"
-                (click)="applyScenarioSelection(scenario.id)"
-              >
-                <span>{{ creditScenarioLabel(scenario, index) }}</span>
-                <strong>{{ formatMoney(scenario.monthlyPayment) }}</strong>
-                <small>{{ formatDuration(scenario.form.durationMonths) }} · {{ formatLongDate(scenario.endDate) }}</small>
-                <em>{{ creditScenarioStatus(scenario) }}</em>
-              </button>
-            }
-          </div>
-        </section>
 
       </section>
     </div>
@@ -181,13 +331,10 @@ export class CreditSimulatorComponent {
     method: 'setupApiProjection'
   };
 
-  readonly durationPresets = [60, 84, 120, 180];
-  readonly selectedScenarioId = signal<string | null>(null);
   readonly hasSimulated = signal(false);
   readonly engineSource = signal<'api' | 'local'>('local');
   readonly engineError = signal<string | null>(null);
   readonly isSyncing = signal(false);
-  readonly liveProjection = signal<CreditProjectionResult | null>(null);
   readonly liveScenario = signal<CreditScenarioResult | null>(null);
   readonly liveProjectionFormKey = signal<string | null>(null);
   readonly renderedScenario = signal<CreditScenarioResult | null>(null);
@@ -199,7 +346,8 @@ export class CreditSimulatorComponent {
       downPayment: [DEFAULT_CREDIT_FORM.downPayment, [Validators.required, Validators.min(0)]],
       interestRate: [DEFAULT_CREDIT_FORM.interestRate, [Validators.required, Validators.min(0), Validators.max(30)]],
       durationMonths: [DEFAULT_CREDIT_FORM.durationMonths, [Validators.required, Validators.min(12), Validators.max(360)]],
-      monthlyIncome: [DEFAULT_CREDIT_FORM.monthlyIncome, [Validators.min(0)]],
+      monthlyIncome: [DEFAULT_CREDIT_FORM.monthlyIncome, [Validators.required, Validators.min(1)]],
+      existingMonthlyCharges: [DEFAULT_CREDIT_FORM.existingMonthlyCharges, [Validators.required, Validators.min(0)]],
       earlyRepaymentAmount: [DEFAULT_CREDIT_FORM.earlyRepaymentAmount, [Validators.min(0)]],
       earlyRepaymentMonth: [DEFAULT_CREDIT_FORM.earlyRepaymentMonth, [Validators.required, Validators.min(1), Validators.max(360)]]
     },
@@ -220,6 +368,7 @@ export class CreditSimulatorComponent {
       interestRate: raw.interestRate ?? undefined,
       durationMonths: raw.durationMonths ?? undefined,
       monthlyIncome: raw.monthlyIncome ?? undefined,
+      existingMonthlyCharges: raw.existingMonthlyCharges ?? undefined,
       earlyRepaymentAmount: raw.earlyRepaymentAmount ?? undefined,
       earlyRepaymentMonth: raw.earlyRepaymentMonth ?? undefined
     });
@@ -232,103 +381,16 @@ export class CreditSimulatorComponent {
 
   readonly localProjection = computed(() => projectCredit(this.normalizedFormValue()));
 
-  readonly projection = computed(() => {
-    const liveProjection = this.liveProjectionFormKey() === this.currentFormKey()
-      ? this.liveProjection()
-      : null;
-    const liveScenario = this.liveProjectionFormKey() === this.currentFormKey()
-      ? this.liveScenario()
-      : null;
-
-    return this.rebuildCreditProjection(
-      this.localProjection(),
-      liveProjection,
-      liveScenario
-    );
-  });
-  readonly renderedScenarioId = computed(() => this.renderedScenario()?.id ?? this.currentScenarioId());
-
-  readonly selectedScenario = computed(() => {
-    const scenarios = this.projection().scenarios;
-    const fallback = this.findCurrentScenario(scenarios) ?? scenarios[0];
-
-    if (!fallback) {
-      throw new Error('Credit scenarios unavailable');
-    }
-
-    return scenarios.find((scenario) => scenario.id === this.selectedScenarioId()) ?? fallback;
-  });
-  readonly activeScenario = computed(() => this.renderedScenario() ?? this.selectedScenario());
-  readonly scenarioBadges = computed(() => this.buildScenarioBadges(this.activeScenario()));
-
-  readonly builderHighlights = computed<BuilderHighlight[]>(() => {
-    const scenario = this.activeScenario();
-    return [
-      { label: 'Capital finance', value: formatMoney(scenario.principal), tone: 'strong' },
-      { label: 'Mensualite estimee', value: formatMoney(scenario.monthlyPayment), tone: 'warning' },
-      { label: 'Ratio d effort', value: formatPercent(scenario.debtRatio), tone: 'neutral' }
-    ];
-  });
-
-  readonly compareCards = computed<CompareScenarioCard[]>(() => (
-    this.projection().scenarios.map((scenario) => ({
-      id: scenario.id,
-      label: scenario.label,
-      badge: `${scenario.form.durationMonths} mois`,
-      headline: formatMoney(scenario.monthlyPayment),
-      description: this.describeScenario(scenario),
-      accent: this.mapAccent(scenario),
-      metrics: [
-        {
-          label: 'Interets',
-          value: formatMoney(scenario.totalInterest),
-          tone: scenario.tone === 'growth' ? 'warning' : 'neutral'
-        },
-        {
-          label: 'Cout global',
-          value: formatMoney(scenario.totalCost),
-          hint: 'Apport et remboursements cumules'
-        },
-        {
-          label: 'Ratio d effort',
-          value: formatPercent(scenario.debtRatio),
-          tone: this.resolveDebtTone(scenario)
-        }
-      ],
-      footer: this.footerCopy(scenario)
-    }))
+  readonly localScenario = computed(() => (
+    this.findScenarioByDuration(this.localProjection().scenarios, this.currentDuration())
+    ?? this.localProjection().scenarios[0]
   ));
-
-  readonly lineChartModel = computed(() => {
-    const scenarios = this.projection().scenarios;
-    const longestScenario = scenarios.reduce((longest, current) => (
-      current.points.length > longest.points.length ? current : longest
-    ));
-
-    return {
-      title: 'Capital restant du selon le scenario',
-      subtitle: 'Visualisez le rythme d extinction du capital finance et l ecart de cadence entre les differentes durees.',
-      labels: longestScenario.points.map((point) => formatMonthLabel(point.date)),
-      series: scenarios.map((scenario) => ({
-        label: `${scenario.label} - ${scenario.form.durationMonths} mois`,
-        values: longestScenario.points.map((_, index) => scenario.points[index]?.remainingBalance ?? 0),
-        color: this.resolveLineColor(scenario),
-        fillColor: this.resolveFillColor(scenario),
-        tension: 0.28
-      }))
-    };
+  readonly sourceScenario = computed(() => {
+    const local = this.localScenario();
+    const live = this.liveProjectionFormKey() === this.currentFormKey() ? this.liveScenario() : null;
+    return this.mergeCreditScenario(local, live);
   });
-
-  readonly barChartModel = computed(() => ({
-    title: 'Charge d interets par horizon',
-    subtitle: 'La vue compare immediatement le trade off entre souplesse mensuelle et cout financier total.',
-    items: this.projection().scenarios.map((scenario) => ({
-      label: `${scenario.form.durationMonths} mois`,
-      value: scenario.totalInterest,
-      color: this.resolveLineColor(scenario),
-      meta: formatMoney(scenario.monthlyPayment)
-    }))
-  }));
+  readonly activeScenario = computed(() => this.renderedScenario() ?? this.sourceScenario());
 
   readonly engineStatusLabel = computed(() => {
     if (this.isSyncing()) {
@@ -371,7 +433,6 @@ export class CreditSimulatorComponent {
   readonly formatPercent = formatPercent;
 
   constructor() {
-    this.setupSelectionSync();
     this.setupRenderedState();
     this.setupApiProjection();
     this.setupDebugLogging();
@@ -389,7 +450,6 @@ export class CreditSimulatorComponent {
 
   resetSimulation(): void {
     this.form.reset({ ...DEFAULT_CREDIT_FORM });
-    this.selectedScenarioId.set(`term-${DEFAULT_CREDIT_FORM.durationMonths}`);
     this.hasSimulated.set(false);
   }
 
@@ -409,20 +469,6 @@ export class CreditSimulatorComponent {
     });
   }
 
-  applyScenarioSelection(scenarioId: string): void {
-    const selectedCard = this.projection().scenarios.find((scenario) => scenario.id === scenarioId);
-
-    if (!selectedCard) {
-      return;
-    }
-
-    this.selectedScenarioId.set(selectedCard.id);
-    this.form.patchValue({
-      durationMonths: selectedCard.form.durationMonths,
-      earlyRepaymentMonth: Math.min(this.normalizedFormValue().earlyRepaymentMonth, selectedCard.form.durationMonths)
-    });
-  }
-
   simpleStatusMessage(): string {
     const scenario = this.activeScenario();
     const earlyRepayment = scenario.earlyRepayment;
@@ -434,46 +480,51 @@ export class CreditSimulatorComponent {
     return `Votre crédit se termine autour de ${formatLongDate(scenario.endDate)} avec un coût total estimé à ${formatMoney(scenario.totalCost)}.`;
   }
 
-  creditScenarioLabel(scenario: CreditScenarioResult, index = 0): string {
-    if (index === 0) {
-      return 'Plan actuel';
+  eligibilityStatusLabel(status: CreditScenarioResult['eligibility']['status']): string {
+    if (status === 'ELIGIBLE') {
+      return 'Éligible';
     }
-
-    if (index === 1) {
-      return 'Durée plus courte';
-    }
-
-    if (scenario.earlyRepayment?.amount || this.normalizedFormValue().earlyRepaymentAmount > 0) {
-      return 'Remboursement anticipé';
-    }
-
-    return 'Mensualité réduite';
-  }
-
-  creditScenarioStatus(scenario: CreditScenarioResult): string {
-    if (scenario.debtRatio !== null && scenario.debtRatio > 40) {
-      return 'Difficile';
-    }
-
-    if (scenario.debtRatio !== null && scenario.debtRatio > 30) {
+    if (status === 'WATCH') {
       return 'À surveiller';
     }
-
-    return 'Réaliste';
+    return 'Non recommandé';
   }
 
-  private setupSelectionSync(): void {
-    toObservable(this.normalizedFormValue)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((formValue) => {
-        this.selectedScenarioId.set(`term-${formValue.durationMonths}`);
-      });
+  eligibilityDecisionMessage(scenario: CreditScenarioResult): string {
+    if (scenario.eligibility.status === 'ELIGIBLE') {
+      return 'Votre mensualité reste dans la limite recommandée par rapport à vos revenus.';
+    }
+    if (scenario.eligibility.status === 'WATCH') {
+      return 'Votre demande est proche de la limite recommandée. Une réduction du montant est conseillée.';
+    }
+    return 'Votre mensualité dépasse largement la limite recommandée. Il est préférable de réduire le montant demandé avant toute demande bancaire.';
+  }
+
+  simulationAlertLabel(scenario: CreditScenarioResult): string {
+    return scenario.eligibility.status === 'WATCH'
+      ? 'Simulation à surveiller'
+      : 'Simulation non recommandée';
+  }
+
+  recommendedReduction(scenario: CreditScenarioResult): number {
+    return Math.max(0, scenario.form.creditAmount - scenario.eligibility.maximumRecommendedAmount);
+  }
+
+  recommendationAction(scenario: CreditScenarioResult): string {
+    if (scenario.eligibility.status === 'WATCH') {
+      return 'Réduisez légèrement le montant demandé ou augmentez la durée afin de ramener la mensualité sous la zone recommandée.';
+    }
+    return 'Réduisez le montant demandé, allongez la durée si votre projet le permet et diminuez vos charges existantes avant une demande bancaire.';
+  }
+
+  debtGaugePosition(scenario: CreditScenarioResult): number {
+    return Math.min(100, Math.max(0, scenario.eligibility.debtRatio / 60 * 100));
   }
 
   private setupRenderedState(): void {
     effect(() => {
       const formValue = this.normalizedFormValue();
-      const scenario = this.selectedScenario();
+      const scenario = this.sourceScenario();
       const renderedScenario = this.cloneCreditScenario(scenario);
       const recalculatedTimeline = this.buildTimelineItems(renderedScenario);
 
@@ -481,7 +532,6 @@ export class CreditSimulatorComponent {
 
       if (!environment.production) {
         console.debug('[CreditSimulator] current scenario retained', {
-          selectedScenarioId: this.selectedScenarioId(),
           currentDurationId: this.currentScenarioId(),
           retainedScenarioId: renderedScenario.id,
           retainedDurationMonths: renderedScenario.form.durationMonths,
@@ -518,7 +568,6 @@ export class CreditSimulatorComponent {
 
             this.isSyncing.set(false);
             this.engineError.set(null);
-            this.liveProjection.set(null);
             this.liveScenario.set(null);
             this.liveProjectionFormKey.set(null);
 
@@ -526,33 +575,26 @@ export class CreditSimulatorComponent {
               source: 'local' as const,
               formKey,
               calculated: fallbackCurrentScenario,
-              compared: fallback,
               error: null
             });
           }
 
           this.isSyncing.set(true);
           this.engineError.set(null);
-          this.liveProjection.set(null);
           this.liveScenario.set(null);
           this.liveProjectionFormKey.set(null);
 
-          return forkJoin({
-            calculated: this.simulationsService.calculateCredit(formValue, this.requestSource),
-            compared: this.simulationsService.compareCredit(formValue, this.requestSource)
-          }).pipe(
-            map((result) => ({
+          return this.simulationsService.calculateCredit(formValue, this.requestSource).pipe(
+            map((calculated) => ({
               source: 'api' as const,
               formKey,
-              calculated: result.calculated,
-              compared: result.compared,
+              calculated,
               error: null
             })),
             catchError((error) => of({
               source: 'local' as const,
               formKey,
               calculated: fallbackCurrentScenario,
-              compared: fallback,
               error
             }))
           );
@@ -563,7 +605,6 @@ export class CreditSimulatorComponent {
         this.isSyncing.set(false);
         this.engineSource.set(state.source);
         this.liveScenario.set(state.calculated);
-        this.liveProjection.set(state.compared);
         this.liveProjectionFormKey.set(state.formKey);
         this.engineError.set(
           state.error?.error?.message ||
@@ -573,29 +614,6 @@ export class CreditSimulatorComponent {
       });
   }
 
-  private rebuildCreditProjection(
-    localProjection: CreditProjectionResult,
-    liveProjection: CreditProjectionResult | null,
-    liveScenario: CreditScenarioResult | null
-  ): CreditProjectionResult {
-    const liveScenarios = liveProjection?.scenarios ?? [];
-    const scenarios = localProjection.scenarios.map((localScenario) => {
-      const comparedScenario = this.findMatchingScenario(liveScenarios, localScenario);
-      const mergedScenario = this.mergeCreditScenario(localScenario, comparedScenario);
-
-      if (liveScenario && this.isSameScenario(liveScenario, localScenario)) {
-        return this.mergeCreditScenario(mergedScenario, liveScenario);
-      }
-
-      return mergedScenario;
-    });
-
-    return {
-      referenceDate: liveProjection?.referenceDate ?? localProjection.referenceDate,
-      scenarios: [...scenarios]
-    };
-  }
-
   private buildFormKey(formValue: CreditFormValue): string {
     return [
       formValue.creditAmount,
@@ -603,6 +621,7 @@ export class CreditSimulatorComponent {
       formValue.interestRate,
       formValue.durationMonths,
       formValue.monthlyIncome,
+      formValue.existingMonthlyCharges,
       formValue.earlyRepaymentAmount,
       formValue.earlyRepaymentMonth
     ].join('|');
@@ -620,12 +639,18 @@ export class CreditSimulatorComponent {
       && raw.interestRate !== undefined
       && raw.durationMonths !== null
       && raw.durationMonths !== undefined
+      && raw.monthlyIncome !== null
+      && raw.monthlyIncome !== undefined
+      && raw.existingMonthlyCharges !== null
+      && raw.existingMonthlyCharges !== undefined
       && raw.earlyRepaymentMonth !== null
       && raw.earlyRepaymentMonth !== undefined
       && Number.isFinite(formValue.creditAmount)
       && Number.isFinite(formValue.downPayment)
       && Number.isFinite(formValue.interestRate)
-      && Number.isFinite(formValue.durationMonths);
+      && Number.isFinite(formValue.durationMonths)
+      && Number.isFinite(formValue.monthlyIncome)
+      && Number.isFinite(formValue.existingMonthlyCharges);
   }
 
   private collectInvalidControls(): string[] {
@@ -652,6 +677,10 @@ export class CreditSimulatorComponent {
         ...baseScenario.form,
         ...overrideScenario.form
       },
+      eligibility: {
+        ...baseScenario.eligibility,
+        ...overrideScenario.eligibility
+      },
       points: points.map((point) => ({ ...point })),
       milestones: milestones.map((milestone) => ({ ...milestone })),
       earlyRepayment: overrideScenario.earlyRepayment
@@ -666,18 +695,11 @@ export class CreditSimulatorComponent {
     return {
       ...scenario,
       form: { ...scenario.form },
+      eligibility: { ...scenario.eligibility },
       points: scenario.points.map((point) => ({ ...point })),
       milestones: scenario.milestones.map((milestone) => ({ ...milestone })),
       earlyRepayment: scenario.earlyRepayment ? { ...scenario.earlyRepayment } : null
     };
-  }
-
-  private findCurrentScenario(scenarios: CreditScenarioResult[]): CreditScenarioResult | null {
-    return (
-      scenarios.find((scenario) => scenario.id === this.currentScenarioId()) ??
-      this.findScenarioByDuration(scenarios, this.currentDuration()) ??
-      null
-    );
   }
 
   private findScenarioByDuration(
@@ -687,63 +709,8 @@ export class CreditSimulatorComponent {
     return scenarios.find((scenario) => scenario.form.durationMonths === durationMonths) ?? null;
   }
 
-  private findMatchingScenario(
-    scenarios: CreditScenarioResult[],
-    targetScenario: CreditScenarioResult
-  ): CreditScenarioResult | null {
-    return (
-      scenarios.find((scenario) => scenario.id === targetScenario.id) ??
-      this.findScenarioByDuration(scenarios, targetScenario.form.durationMonths)
-    );
-  }
-
-  private isSameScenario(
-    left: CreditScenarioResult,
-    right: CreditScenarioResult
-  ): boolean {
-    return left.id === right.id || left.form.durationMonths === right.form.durationMonths;
-  }
-
   private buildTimelineItems(scenario: CreditScenarioResult): TimelineItem[] {
     return scenario.milestones.map((milestone) => this.mapTimelineItem(milestone, scenario));
-  }
-
-  private buildScenarioBadges(scenario: CreditScenarioResult): string[] {
-    const badges = [this.buildDurationBadge(scenario), this.buildDebtBadge(scenario), this.buildInterestBadge(scenario)];
-    return badges.filter((badge, index, source) => !!badge && source.indexOf(badge) === index).slice(0, 3);
-  }
-
-  private buildDurationBadge(scenario: CreditScenarioResult): string {
-    if (scenario.form.durationMonths <= 72) {
-      return 'Horizon agile';
-    }
-    if (scenario.form.durationMonths >= 144) {
-      return 'Horizon long';
-    }
-    return 'Lecture equilibree';
-  }
-
-  private buildDebtBadge(scenario: CreditScenarioResult): string {
-    if (scenario.debtRatio === null) {
-      return 'Effort non renseigne';
-    }
-    if (scenario.debtRatio <= 30) {
-      return 'Effort modere';
-    }
-    if (scenario.debtRatio <= 40) {
-      return 'Effort suivi';
-    }
-    return 'Effort soutenu';
-  }
-
-  private buildInterestBadge(scenario: CreditScenarioResult): string {
-    if (scenario.totalInterest <= scenario.principal * 0.22) {
-      return 'Charge contenue';
-    }
-    if (scenario.totalInterest >= scenario.principal * 0.45) {
-      return 'Charge etendue';
-    }
-    return 'Charge lissee';
   }
 
   private validateTimelineConsistency(
@@ -799,7 +766,6 @@ export class CreditSimulatorComponent {
 
     effect(() => {
       const formValue = this.normalizedFormValue();
-      const projection = this.projection();
       const scenario = this.renderedScenario();
       const timeline = this.renderedTimelineItems();
 
@@ -810,9 +776,7 @@ export class CreditSimulatorComponent {
       console.debug('[CreditSimulator] form parameters', { ...formValue });
       console.debug('[CreditSimulator] scenario recalculated', {
         source: this.engineSource(),
-        selectedScenarioId: scenario.id,
         currentDurationRetained: scenario.form.durationMonths,
-        comparedDurations: projection.scenarios.map((item) => item.form.durationMonths),
         principal: scenario.principal,
         monthlyPayment: scenario.monthlyPayment,
         totalInterest: scenario.totalInterest,
@@ -842,56 +806,4 @@ export class CreditSimulatorComponent {
     };
   }
 
-  private describeScenario(scenario: CreditScenarioResult): string {
-    if (scenario.id === `term-${this.currentDuration()}`) {
-      return 'Scenario cale sur la duree actuellement retenue dans le formulaire.';
-    }
-    if (scenario.form.durationMonths < this.currentDuration()) {
-      return 'Lecture plus resserree avec une mensualite plus soutenue et une sortie anticipee.';
-    }
-    return 'Cadence plus souple au mois, avec une facture d interets plus etalee dans le temps.';
-  }
-
-  private footerCopy(scenario: CreditScenarioResult): string {
-    if (scenario.earlyRepayment?.termReductionMonths) {
-      return `Remboursement anticipe simule : sortie avancee de ${scenario.earlyRepayment.termReductionMonths} mois.`;
-    }
-    return `Date de fin estimee : ${formatLongDate(scenario.endDate)}.`;
-  }
-
-  private mapAccent(scenario: CreditScenarioResult): 'orange' | 'charcoal' | 'sand' {
-    if (scenario.form.durationMonths === this.currentDuration()) {
-      return 'charcoal';
-    }
-    return scenario.form.durationMonths < this.currentDuration() ? 'orange' : 'sand';
-  }
-
-  private resolveDebtTone(scenario: CreditScenarioResult): 'neutral' | 'positive' | 'warning' | 'danger' {
-    if (scenario.debtRatio === null) {
-      return 'neutral';
-    }
-    if (scenario.debtRatio <= 30) {
-      return 'positive';
-    }
-    if (scenario.debtRatio <= 40) {
-      return 'warning';
-    }
-    return 'danger';
-  }
-
-  private resolveLineColor(scenario: CreditScenarioResult): string {
-    if (scenario.form.durationMonths === this.currentDuration()) {
-      return '#1C1C1C';
-    }
-    return scenario.form.durationMonths < this.currentDuration() ? '#F58220' : '#B67E4B';
-  }
-
-  private resolveFillColor(scenario: CreditScenarioResult): string {
-    if (scenario.form.durationMonths === this.currentDuration()) {
-      return 'rgba(28, 28, 28, 0.08)';
-    }
-    return scenario.form.durationMonths < this.currentDuration()
-      ? 'rgba(245, 130, 32, 0.18)'
-      : 'rgba(182, 126, 75, 0.16)';
-  }
 }

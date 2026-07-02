@@ -1,11 +1,12 @@
-# Power BI
+# Power BI - Dashboard Admin
 
-Ce dossier contient le tableau de bord Power BI du projet AttijariCompass Final.
+Ce dossier contient le dashboard Power BI Back Office du projet Attijari Compass.
 
-## Fichier
+## Source de données
+- PostgreSQL local
+- Base : compassbd
+- Tables principales : app_user, transaction, user_card, budget_target, financial_goal
 
-- `attijari compass power bi.pbix` : rapport Power BI principal du projet.
-
-## Utilisation
-
-Ouvrir le fichier `.pbix` avec Power BI Desktop pour consulter ou modifier le tableau de bord.
+## Remarque
+Le fichier .pbix ne contient pas les identifiants de connexion.
+Chaque utilisateur doit reconnecter Power BI à sa propre base PostgreSQL.

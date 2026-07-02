@@ -23,4 +23,5 @@ public class CreditCalculateResponse {
     private LocalDate endDate;
     private List<AmortizationPreviewItemResponse> amortizationPreview;
     private EarlyRepaymentImpactResponse earlyRepaymentImpact;
+    private CreditEligibilityResponse eligibility;
 }

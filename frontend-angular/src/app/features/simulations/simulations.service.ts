@@ -193,6 +193,7 @@ export class SimulationsService {
       durationMonths: request.durationMonths,
       annualInterestRate: request.interestRate,
       monthlyIncome: request.monthlyIncome,
+      existingMonthlyCharges: request.existingMonthlyCharges,
       earlyRepaymentAmount: request.earlyRepaymentAmount,
       earlyRepaymentMonth: request.earlyRepaymentMonth
     };
@@ -282,12 +283,15 @@ export class SimulationsService {
       && Number.isFinite(payload.annualInterestRate)
       && Number.isFinite(payload.durationMonths)
       && Number.isFinite(payload.monthlyIncome)
+      && Number.isFinite(payload.existingMonthlyCharges)
       && Number.isFinite(payload.earlyRepaymentAmount)
       && Number.isFinite(payload.earlyRepaymentMonth)
       && payload.loanAmount >= 10_000
       && payload.downPayment >= 0
       && payload.downPayment <= payload.loanAmount
       && payload.annualInterestRate >= 0
+      && payload.monthlyIncome > 0
+      && payload.existingMonthlyCharges >= 0
       && payload.durationMonths >= 12
       && payload.earlyRepaymentMonth >= 1;
   }
@@ -438,6 +442,7 @@ export class SimulationsService {
     const source = this.asRecord(rawValue);
     const points = this.normalizeCreditPoints(source['points'] ?? source['schedule'], fallback.points, referenceDate);
     const earlyRepaymentSource = this.asRecord(source['earlyRepayment']);
+    const eligibilitySource = this.asRecord(source['eligibility']);
     const principal = this.pickNumber(source, ['principal', 'loanAmount', 'borrowedAmount']) ?? fallback.principal;
     const lastPoint = points[points.length - 1] ?? fallback.points[fallback.points.length - 1];
     const totalRepayment = lastPoint?.cumulativePaid ?? fallback.totalRepayment;
@@ -459,6 +464,30 @@ export class SimulationsService {
       totalCost: totalRepayment + fallback.form.downPayment,
       totalInterest,
       debtRatio: this.pickNumber(source, ['debtRatio', 'effortRate', 'incomeRatio']) ?? fallback.debtRatio,
+      eligibility: Object.keys(eligibilitySource).length
+        ? {
+            status: this.pickString(eligibilitySource, ['status']) as CreditScenarioResult['eligibility']['status']
+              ?? fallback.eligibility.status,
+            realRepaymentCapacity:
+              this.pickNumber(eligibilitySource, ['realRepaymentCapacity', 'repaymentCapacity']) ??
+              fallback.eligibility.realRepaymentCapacity,
+            debtRatio:
+              this.pickNumber(eligibilitySource, ['debtRatio', 'effortRate']) ??
+              fallback.eligibility.debtRatio,
+            maximumRecommendedAmount:
+              this.pickNumber(eligibilitySource, ['maximumRecommendedAmount', 'recommendedMaximumAmount']) ??
+              fallback.eligibility.maximumRecommendedAmount,
+            message: this.pickString(eligibilitySource, ['message']) ?? fallback.eligibility.message,
+            recommended:
+              this.pickBoolean(eligibilitySource, ['recommended']) ?? fallback.eligibility.recommended,
+            recommendedDurationMonths:
+              this.pickNumber(eligibilitySource, ['recommendedDurationMonths']) ??
+              fallback.eligibility.recommendedDurationMonths,
+            recommendedChargeReduction:
+              this.pickNumber(eligibilitySource, ['recommendedChargeReduction']) ??
+              fallback.eligibility.recommendedChargeReduction
+          }
+        : fallback.eligibility,
       endDate,
       points,
       milestones,

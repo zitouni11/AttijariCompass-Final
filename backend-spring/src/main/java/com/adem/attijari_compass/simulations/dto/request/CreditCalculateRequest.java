@@ -37,9 +37,15 @@ public class CreditCalculateRequest {
     @Schema(example = "84")
     private Integer durationMonths;
 
-    @PositiveOrZero
+    @NotNull
+    @Positive
     @Schema(example = "6200")
     private BigDecimal monthlyIncome;
+
+    @NotNull
+    @PositiveOrZero
+    @Schema(example = "800")
+    private BigDecimal existingMonthlyCharges;
 
     @PositiveOrZero
     @Schema(example = "15000")

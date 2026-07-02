@@ -85,6 +85,7 @@ export interface CreditFormValue {
   interestRate: number;
   durationMonths: number;
   monthlyIncome: number;
+  existingMonthlyCharges: number;
   earlyRepaymentAmount: number;
   earlyRepaymentMonth: number;
 }
@@ -106,6 +107,19 @@ export interface CreditEarlyRepaymentResult {
   termReductionMonths: number;
 }
 
+export type CreditEligibilityStatus = 'ELIGIBLE' | 'WATCH' | 'NOT_ELIGIBLE';
+
+export interface CreditEligibilityResult {
+  status: CreditEligibilityStatus;
+  realRepaymentCapacity: number;
+  debtRatio: number;
+  maximumRecommendedAmount: number;
+  message: string;
+  recommended: boolean;
+  recommendedDurationMonths: number | null;
+  recommendedChargeReduction: number;
+}
+
 export interface CreditScenarioResult {
   id: string;
   label: string;
@@ -117,6 +131,7 @@ export interface CreditScenarioResult {
   totalCost: number;
   totalInterest: number;
   debtRatio: number | null;
+  eligibility: CreditEligibilityResult;
   endDate: Date;
   points: CreditPoint[];
   milestones: ProjectionMilestone[];
